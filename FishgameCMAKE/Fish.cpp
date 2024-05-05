@@ -34,7 +34,7 @@
         switch (GetRandomValue(0, 5)) {
         case 0:
             m_name = "Joel";
-            m_tex = texman.getTexture("fish1");
+            m_tex = texman.getTexture("cod");
         break;
         case 1:
             m_name = "Damien";
@@ -53,12 +53,12 @@
         break;
         case 4:
             m_name = "Bingus";
-            m_tex = texman.getTexture("fish1");
+            m_tex = texman.getTexture("cod");
 
         break;
         case 5:
             m_name = "Ben";
-            m_tex = texman.getTexture("fish1");
+            m_tex = texman.getTexture("cod");
 
         break;
         }

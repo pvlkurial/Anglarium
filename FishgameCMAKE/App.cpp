@@ -6,6 +6,9 @@
 #include "CFishing.h"
 #include <sstream>
 
+static void DrawTextBoxed(Font font, const char* text, Rectangle rec, float fontSize, float spacing, bool wordWrap, Color tint);   // Draw text using font inside rectangle limits
+static void DrawTextBoxedSelectable(Font font, const char* text, Rectangle rec, float fontSize, float spacing, bool wordWrap, Color tint, int selectStart, int selectLength, Color selectTint, Color selectBackTint);    // Draw text using font inside rectangle limits with support for text selection
+
 template<typename T>
 std::string toString(const T& src) {
 	std::stringstream is;
@@ -32,7 +35,7 @@ void App::Init() {
 	textures.addTexture("water", "C:/Users/pavel/source/repos/FishgameCMAKE/FishgameCMAKE/resources/textures/water.png");
 	textures.addTexture("sand", "C:/Users/pavel/source/repos/FishgameCMAKE/FishgameCMAKE/resources/textures/sand.png");
 	textures.addTexture("char", "C:/Users/pavel/source/repos/FishgameCMAKE/FishgameCMAKE/resources/textures/char.png");
-	textures.addTexture("fish1", "C:/Users/pavel/source/repos/FishgameCMAKE/FishgameCMAKE/resources/textures/Lfish1.png");
+	textures.addTexture("cod", "C:/Users/pavel/source/repos/FishgameCMAKE/FishgameCMAKE/resources/textures/cod.png");
 	textures.addTexture("sand32", "C:/Users/pavel/source/repos/FishgameCMAKE/FishgameCMAKE/resources/textures/sand32.png");
 	textures.addTexture("grass32", "C:/Users/pavel/source/repos/FishgameCMAKE/FishgameCMAKE/resources/textures/grass32.png");
 	textures.addTexture("coin", "C:/Users/pavel/source/repos/FishgameCMAKE/FishgameCMAKE/resources/textures/coin.png");
@@ -87,6 +90,8 @@ void App::OnRender() {
 	Rectangle shop_inv_rec;
 	Rectangle shop_talk_rec;
 	Vector2 trgt;
+	float scale_offset = sqrt((GetScreenHeight() * GetScreenHeight()) / (540 * 540));
+
 
 	switch (currentScreen) {
 
@@ -183,7 +188,7 @@ void App::OnRender() {
 			if ((mouseX > 0) && (128 > mouseX) &&
 				(mouseY > 0) && (mouseY < 128) && player.fishInventory.size() > 0) {
 				// check which box is mouse in
-				DrawTexture(textures.getTexture("fish1"), screenCornerX, screenCornerY, WHITE);
+				DrawTexture(textures.getTexture("cod"), screenCornerX, screenCornerY, WHITE);
 				DrawText(toString<double>(player.fishInventory[0].weight).c_str(), screenCornerX, screenCornerY, 50, RAYWHITE);
 			}
 			if ((mouseX > 0) && (128 > mouseX) &&
@@ -216,9 +221,9 @@ void App::OnRender() {
 		DrawText("FISH SHOP", 0 + 1, 0 + 1, 100, BLACK);
 		DrawText("FISH SHOP", 0 + 1, 0 + 1, 100, RAYWHITE);
 		DrawRectangle(0, 0 + GetScreenHeight()  / 3 * 2, GetScreenWidth(), GetScreenHeight() / 2, RAYWHITE);
-		DrawTextureEx(textures.getTexture("coin"), { 0, (float)GetScreenHeight() / 3 * 2 }, 0, 2.2, WHITE);
+		DrawTextureEx(textures.getTexture("coin"), { 0, (float)GetScreenHeight() / 3 * 2 }, 0, 2.2 * scale_offset, WHITE);
 		player.gold = 290;
-		DrawText(toString(player.gold).c_str(), 0 + 64, 0 + GetScreenHeight() / 3 * 2 + 12, 45, BLACK);
+		DrawText(toString(player.gold).c_str(), 0 + (64 * scale_offset), 0 + GetScreenHeight() / 3 * 2 + (12 * scale_offset), 45 * scale_offset, BLACK);
 		switch (currentShopMenu) {
 		case NO:
 			shop_inv_rec = { (float)GetScreenWidth() / 4, (float)GetScreenHeight() / 3 * 2 + 8, (float)GetScreenWidth() / 5, (float)GetScreenHeight() / 10 };
@@ -234,10 +239,66 @@ void App::OnRender() {
 			if(IsKeyPressed(KEY_BACKSPACE)){
 				currentShopMenu = NO;
 			}
-			DrawTextureEx(player.fishInventory[0].m_tex, { (float)GetScreenWidth() / 5, (float)GetScreenHeight() / 3*2 + 20 }, 0, 1, WHITE);
-			DrawTextureEx(player.fishInventory[1].m_tex, { (float)GetScreenWidth() / 5 * 2, (float)GetScreenHeight() / 3*2 + 20 }, 0, 1, WHITE);
-			DrawTextureEx(player.fishInventory[2].m_tex, { (float)GetScreenWidth() / 5 * 3, (float)GetScreenHeight() / 3*2 + 20 }, 0, 1, WHITE);
-			DrawTextureEx(player.fishInventory[3].m_tex, { (float)GetScreenWidth()/5 * 4, (float)GetScreenHeight()/3*2 + 20}, 0, 1, WHITE);
+			if (!player.fishInventory.empty()) {
+				DrawTextureEx(player.fishInventory[0].m_tex, { (float)GetScreenWidth() / 6 - 20, (float)GetScreenHeight() / 3 * 2 + (20*scale_offset) }, 0, 1 * scale_offset, WHITE);
+				Rectangle fish1rec = { (float)GetScreenWidth() / 6 - 20, (float)GetScreenHeight() / 3 * 2 + (20 * scale_offset) , player.fishInventory[0].m_tex.width, player.fishInventory[0].m_tex.height };
+				if (CheckCollisionPointRec(GetMousePosition(), fish1rec)) {
+					DrawRectangleRounded(fish1rec, 0.5, 4, { 0,0,0,100 });
+					std::string temp;
+					temp.append(toString(player.fishInventory[0].m_name)).append("\n").append(toString(player.fishInventory[0].weight)).append("\n")
+						.append(toString(player.fishInventory[0].rarity));
+					DrawTextBoxed(GetFontDefault(), temp.c_str(), fish1rec, 30*scale_offset, 1, true, RAYWHITE);
+				}
+				if (player.fishInventory.size() > 1) {
+					DrawTextureEx(player.fishInventory[1].m_tex, { (float)GetScreenWidth() / 6 * 2 - 20, (float)GetScreenHeight() / 3*2 + (20 * scale_offset) }, 0, 1 * scale_offset, WHITE);
+					Rectangle fish1rec = { (float)GetScreenWidth() / 6 * 2 - 20, (float)GetScreenHeight() / 3 * 2 + (20 * scale_offset) , player.fishInventory[0].m_tex.width, player.fishInventory[0].m_tex.height };
+					if (CheckCollisionPointRec(GetMousePosition(), fish1rec)) {
+						DrawRectangleRounded(fish1rec, 0.5, 4, { 0,0,0,100 });
+						std::string temp;
+						temp.append(toString(player.fishInventory[1].m_name)).append("\n").append(toString(player.fishInventory[1].weight)).append("\n")
+							.append(toString(player.fishInventory[1].rarity));
+						DrawTextBoxed(GetFontDefault(), temp.c_str(), fish1rec, 30 * scale_offset, 1, true, RAYWHITE);
+					}
+					if (player.fishInventory.size() > 2) {
+						DrawTextureEx(player.fishInventory[2].m_tex, { (float)GetScreenWidth() / 6 * 3 - 20, (float)GetScreenHeight() / 3*2 + (20 * scale_offset) }, 0, 1 * scale_offset, WHITE);
+						Rectangle fish1rec = { (float)GetScreenWidth() / 6 * 3 - 20, (float)GetScreenHeight() / 3 * 2 + (20 * scale_offset) , player.fishInventory[0].m_tex.width, player.fishInventory[0].m_tex.height };
+						if (CheckCollisionPointRec(GetMousePosition(), fish1rec)) {
+							DrawRectangleRounded(fish1rec, 0.5, 4, { 0,0,0,100 });
+							std::string temp;
+							temp.append(toString(player.fishInventory[2].m_name)).append("\n").append(toString(player.fishInventory[2].weight)).append("\n")
+								.append(toString(player.fishInventory[2].rarity));
+							DrawTextBoxed(GetFontDefault(), temp.c_str(), fish1rec, 30 * scale_offset, 1, true, RAYWHITE);
+						}
+						if (player.fishInventory.size() > 3) {
+							DrawTextureEx(player.fishInventory[3].m_tex, { (float)GetScreenWidth() / 6 * 4 - 20, (float)GetScreenHeight() / 3 * 2 + (20 * scale_offset) }, 0, 1 * scale_offset, WHITE);
+							Rectangle fish1rec = { (float)GetScreenWidth() / 6 * 4 - 20, (float)GetScreenHeight() / 3 * 2 + (20 * scale_offset) , player.fishInventory[0].m_tex.width, player.fishInventory[0].m_tex.height };
+							if (CheckCollisionPointRec(GetMousePosition(), fish1rec)) {
+								DrawRectangleRounded(fish1rec, 0.5, 4, { 0,0,0,100 });
+								std::string temp;
+								temp.append(toString(player.fishInventory[3].m_name)).append("\n").append(toString(player.fishInventory[3].weight)).append("\n")
+									.append(toString(player.fishInventory[3].rarity));
+								DrawTextBoxed(GetFontDefault(), temp.c_str(), fish1rec, 30 * scale_offset, 1, true, RAYWHITE);
+							}
+							if (player.fishInventory.size() > 4) {
+								DrawTextureEx(player.fishInventory[4].m_tex, { (float)GetScreenWidth()/ 6 * 5 - 20, (float)GetScreenHeight()/3*2 + (20 * scale_offset) }, 0, 1 * scale_offset, WHITE);
+								Rectangle fish1rec = { (float)GetScreenWidth() / 6 * 5 - 20, (float)GetScreenHeight() / 3 * 2 + (20 * scale_offset) , player.fishInventory[0].m_tex.width, player.fishInventory[0].m_tex.height };
+								if (CheckCollisionPointRec(GetMousePosition(), fish1rec)) {
+									DrawRectangleRounded(fish1rec, 0.5, 4, { 0,0,0,100 });
+									std::string temp;
+									temp.append(toString(player.fishInventory[4].m_name)).append("\n").append(toString(player.fishInventory[4].weight)).append("\n")
+										.append(toString(player.fishInventory[4].rarity));
+									DrawTextBoxed(GetFontDefault(), temp.c_str(), fish1rec, 30 * scale_offset, 1, true, RAYWHITE);
+								}
+							}
+						}
+					}
+				
+				}
+			}
+			else {
+				DrawText("INVENTORY IS EMPTY", (float)GetScreenWidth() / 3, (float)GetScreenHeight() / 3 * 2 + 20, 35*scale_offset, BLACK);
+			}
+
 		break;
 		default:
 		break;
@@ -257,4 +318,140 @@ void App::OnRender() {
 		textures.unloadTextures();
 		soundsMan.unloadSounds();
 		CloseAudioDevice();
+	}
+
+	static void DrawTextBoxed(Font font, const char* text, Rectangle rec, float fontSize, float spacing, bool wordWrap, Color tint)
+	{
+		DrawTextBoxedSelectable(font, text, rec, fontSize, spacing, wordWrap, tint, 0, 0, WHITE, WHITE);
+	}
+
+
+
+	static void DrawTextBoxedSelectable(Font font, const char* text, Rectangle rec, float fontSize, float spacing, bool wordWrap, Color tint, int selectStart, int selectLength, Color selectTint, Color selectBackTint)
+	{
+		int length = TextLength(text);  // Total length in bytes of the text, scanned by codepoints in loop
+
+		float textOffsetY = 0;          // Offset between lines (on line break '\n')
+		float textOffsetX = 0.0f;       // Offset X to next character to draw
+
+		float scaleFactor = fontSize / (float)font.baseSize;     // Character rectangle scaling factor
+
+		// Word/character wrapping mechanism variables
+		enum { MEASURE_STATE = 0, DRAW_STATE = 1 };
+		int state = wordWrap ? MEASURE_STATE : DRAW_STATE;
+
+		int startLine = -1;         // Index where to begin drawing (where a line begins)
+		int endLine = -1;           // Index where to stop drawing (where a line ends)
+		int lastk = -1;             // Holds last value of the character position
+
+		for (int i = 0, k = 0; i < length; i++, k++)
+		{
+			// Get next codepoint from byte string and glyph index in font
+			int codepointByteCount = 0;
+			int codepoint = GetCodepoint(&text[i], &codepointByteCount);
+			int index = GetGlyphIndex(font, codepoint);
+
+			// NOTE: Normally we exit the decoding sequence as soon as a bad byte is found (and return 0x3f)
+			// but we need to draw all of the bad bytes using the '?' symbol moving one byte
+			if (codepoint == 0x3f) codepointByteCount = 1;
+			i += (codepointByteCount - 1);
+
+			float glyphWidth = 0;
+			if (codepoint != '\n')
+			{
+				glyphWidth = (font.glyphs[index].advanceX == 0) ? font.recs[index].width * scaleFactor : font.glyphs[index].advanceX * scaleFactor;
+
+				if (i + 1 < length) glyphWidth = glyphWidth + spacing;
+			}
+
+			// NOTE: When wordWrap is ON we first measure how much of the text we can draw before going outside of the rec container
+			// We store this info in startLine and endLine, then we change states, draw the text between those two variables
+			// and change states again and again recursively until the end of the text (or until we get outside of the container).
+			// When wordWrap is OFF we don't need the measure state so we go to the drawing state immediately
+			// and begin drawing on the next line before we can get outside the container.
+			if (state == MEASURE_STATE)
+			{
+				// TODO: There are multiple types of spaces in UNICODE, maybe it's a good idea to add support for more
+				// Ref: http://jkorpela.fi/chars/spaces.html
+				if ((codepoint == ' ') || (codepoint == '\t') || (codepoint == '\n')) endLine = i;
+
+				if ((textOffsetX + glyphWidth) > rec.width)
+				{
+					endLine = (endLine < 1) ? i : endLine;
+					if (i == endLine) endLine -= codepointByteCount;
+					if ((startLine + codepointByteCount) == endLine) endLine = (i - codepointByteCount);
+
+					state = !state;
+				}
+				else if ((i + 1) == length)
+				{
+					endLine = i;
+					state = !state;
+				}
+				else if (codepoint == '\n') state = !state;
+
+				if (state == DRAW_STATE)
+				{
+					textOffsetX = 0;
+					i = startLine;
+					glyphWidth = 0;
+
+					// Save character position when we switch states
+					int tmp = lastk;
+					lastk = k - 1;
+					k = tmp;
+				}
+			}
+			else
+			{
+				if (codepoint == '\n')
+				{
+					if (!wordWrap)
+					{
+						textOffsetY += (font.baseSize + font.baseSize / 2) * scaleFactor;
+						textOffsetX = 0;
+					}
+				}
+				else
+				{
+					if (!wordWrap && ((textOffsetX + glyphWidth) > rec.width))
+					{
+						textOffsetY += (font.baseSize + font.baseSize / 2) * scaleFactor;
+						textOffsetX = 0;
+					}
+
+					// When text overflows rectangle height limit, just stop drawing
+					if ((textOffsetY + font.baseSize * scaleFactor) > rec.height) break;
+
+					// Draw selection background
+					bool isGlyphSelected = false;
+					if ((selectStart >= 0) && (k >= selectStart) && (k < (selectStart + selectLength)))
+					{
+						DrawRectangleRec({ rec.x + textOffsetX - 1, rec.y + textOffsetY, glyphWidth, (float)font.baseSize* scaleFactor }, selectBackTint);
+						isGlyphSelected = true;
+					}
+
+					// Draw current character glyph
+					if ((codepoint != ' ') && (codepoint != '\t'))
+					{
+						DrawTextCodepoint(font, codepoint, { rec.x + textOffsetX, rec.y + textOffsetY }, fontSize, isGlyphSelected ? selectTint : tint);
+					}
+				}
+
+				if (wordWrap && (i == endLine))
+				{
+					textOffsetY += (font.baseSize + font.baseSize / 2) * scaleFactor;
+					textOffsetX = 0;
+					startLine = endLine;
+					endLine = -1;
+					glyphWidth = 0;
+					selectStart += lastk - k;
+					k = lastk;
+
+					state = !state;
+				}
+			}
+
+			if ((textOffsetX != 0) || (codepoint != ' ')) textOffsetX += glyphWidth;  // avoid leading spaces
+		}
 	}
