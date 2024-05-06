@@ -1,6 +1,7 @@
 #pragma once
 #include "raylib.h"
 #include <vector>
+#include "CTextureManager.h"
 
 class CFishingSpot {
 public:
@@ -18,7 +19,9 @@ public:
 
     void addFishingSpot(int posX, int posY, int width, int height);
 
-    void drawFishingSpots() const;
+    void drawFishingSpots(CTextureManager& texman) const;
+
+    void drawObjects(CTextureManager& texman) const;
 };
 
 class CShop {

@@ -30,7 +30,7 @@
     }
 
     Fish::Fish(int rodLuck, int playerLuck, int playerSkill, int playerLevel, int rodStrength, CTextureManager & texman)  {
-        weight = (GetRandomValue(0, 5) * rodStrength * (playerLevel / 5.000) + 1.000*playerSkill*playerLuck) / 10.000;
+        weight = (GetRandomValue(500, 5000) / 1000 * rodStrength * (playerLevel / 5.000) + 1.373*playerSkill*playerLuck) / 10.000;
         rarity = getRarity(rodLuck, playerLuck, playerSkill);
         selected = false;
         switch (GetRandomValue(0, 5)) {

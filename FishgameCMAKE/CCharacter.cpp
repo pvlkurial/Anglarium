@@ -90,7 +90,7 @@ void CCharacter::kbListen(CFishingSpot& fishSpot, Texture2D& pop_tex, CShop & sh
     }
     if (IsKeyDown(KEY_B)) {
         shops.drawShopSpots();
-        fishSpot.drawFishingSpots();
+        fishSpot.drawFishingSpots(texman);
         
     }
     if (IsKeyPressed(KEY_F11)) {
@@ -159,12 +159,12 @@ bool CCharacter::checkShopCollision(CShop & shop) const {
 }
 
 int CCharacter::getGold(Fish& fish) {
-    return (fish.rarity + 1.5) * fish.weight * luck * 0.522 * 25;
+    return (fish.rarity + 1.5) * fish.weight * luck * 0.522 * 25 * (level * 1.267);
 }
 
 void CCharacter::sellFish(Fish& fish) {
-    gold += (fish.rarity + 1.5) * fish.weight * luck * 0.522 * 25 * (level * 1.767);
-    std::cout << (fish.rarity + 1.5) * fish.weight * luck * 0.522 * 25 * (level*1.767) << std::endl;
+    gold += getGold(fish);
+    std::cout << (fish.rarity + 1.5) * fish.weight * luck * 0.522 * 25 * (level*1.267) << std::endl;
     auto it = std::find(fishInventory.begin(), fishInventory.end(), fish);
     if (it != fishInventory.end()) {
         fishInventory.erase(it);

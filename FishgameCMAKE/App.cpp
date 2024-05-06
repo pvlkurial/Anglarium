@@ -15,6 +15,31 @@ std::string toString(const T& src) {
 	is << src;
 	return is.str();
 }
+std::string getRarityText(int rarity) {
+	switch (rarity) {
+	case 0:
+		return "Common";
+		break;
+	case 1:
+		return "Uncommon";
+		break;
+	case 2:
+		return "Rare";
+		break;
+	case 3:
+		return "Epic";
+		break;
+	case 4:
+		return "Legendary";
+		break;
+	case 5:
+		return "Ancient";
+		break;
+	case 6:
+		return "Mythic";
+		break;
+	}
+}
 
 App::App() : textures(CTextureManager()), camera({0}) {}
 
@@ -28,13 +53,8 @@ void App::Init() {
 
 	currentShopMenu = NO;
 
-	textures.addTexture("nature", "C:/Users/pavel/source/repos/FishgameCMAKE/FishgameCMAKE/Resources/Textures/texture.png");
-	textures.addTexture("bark", "C:/Users/pavel/source/repos/FishgameCMAKE/FishgameCMAKE/resources/textures/bark_large.png");
+
 	textures.addTexture("popup_bg", "C:/Users/pavel/source/repos/FishgameCMAKE/FishgameCMAKE/resources/textures/popup_bg.png");
-	textures.addTexture("grass", "C:/Users/pavel/source/repos/FishgameCMAKE/FishgameCMAKE/resources/textures/grass.png");
-	textures.addTexture("water", "C:/Users/pavel/source/repos/FishgameCMAKE/FishgameCMAKE/resources/textures/water.png");
-	textures.addTexture("sand", "C:/Users/pavel/source/repos/FishgameCMAKE/FishgameCMAKE/resources/textures/sand.png");
-	textures.addTexture("char", "C:/Users/pavel/source/repos/FishgameCMAKE/FishgameCMAKE/resources/textures/char.png");
 	textures.addTexture("cod", "C:/Users/pavel/source/repos/FishgameCMAKE/FishgameCMAKE/resources/textures/cod.png");
 	textures.addTexture("sand32", "C:/Users/pavel/source/repos/FishgameCMAKE/FishgameCMAKE/resources/textures/sand32.png");
 	textures.addTexture("grass32", "C:/Users/pavel/source/repos/FishgameCMAKE/FishgameCMAKE/resources/textures/grass32.png");
@@ -42,6 +62,8 @@ void App::Init() {
 	textures.addTexture("pufferfish", "C:/Users/pavel/source/repos/FishgameCMAKE/FishgameCMAKE/resources/textures/fish2.png");
 	textures.addTexture("bluefish", "C:/Users/pavel/source/repos/FishgameCMAKE/FishgameCMAKE/resources/textures/fish3.png");
 	textures.addTexture("clownfish", "C:/Users/pavel/source/repos/FishgameCMAKE/FishgameCMAKE/resources/textures/clownfish.png");
+	textures.addTexture("water32", "C:/Users/pavel/source/repos/FishgameCMAKE/FishgameCMAKE/resources/textures/water32.png");
+	textures.addTexture("fishhut", "C:/Users/pavel/source/repos/FishgameCMAKE/FishgameCMAKE/resources/textures/fishhut.png");
 
 	map = CMap(textures, "C:/Users/pavel/source/repos/FishgameCMAKE/FishgameCMAKE/resources/maps/map1.fshmap");
 
@@ -49,6 +71,7 @@ void App::Init() {
 
 	fishSpot.addFishingSpot(50, 50, 50, 50);
 	fishSpot.addFishingSpot(200, 200, 50, 50);
+	fishSpot.addFishingSpot(16 * 32, 27 * 32, 50, 50);
 
 	shops.addShopSpot(0, 100, 50, 50);
 
@@ -60,7 +83,7 @@ void App::RunGame()
 {
 	
 	InitWindow(screenWidth, screenHeight, "Anglarium");
-	SetWindowIcon(LoadImageFromTexture(textures.getTexture("fish1")));
+	SetWindowIcon(LoadImageFromTexture(textures.getTexture("water32")));
 	SetTargetFPS(60);
 	SetExitKey(KEY_ESCAPE);
 	InitAudioDevice();
@@ -70,7 +93,6 @@ void App::RunGame()
 	camera.offset = ofs;
 	camera.rotation = 0.0f;
 	camera.zoom = 3.0f;
-	player.gold = 290;
 
 }
 
@@ -80,6 +102,7 @@ void App::OnRender() {
 
 	int mouseX = GetMouseX();
 	int mouseY = GetMouseY();
+
 
 	BeginDrawing();
 	ClearBackground(BLACK);
@@ -92,7 +115,6 @@ void App::OnRender() {
 	Rectangle shop_talk_rec;
 	Vector2 trgt;
 	float scale_offset = sqrt((GetScreenHeight() * GetScreenHeight()) / (540 * 540));
-
 
 	switch (currentScreen) {
 
@@ -158,6 +180,8 @@ void App::OnRender() {
 		player.charUpdate();
 		screenCornerX = player.m_posX - GetScreenWidth() / 2 / camera.zoom + 10;
 		screenCornerY = player.m_posY - GetScreenHeight() / 2 / camera.zoom + 10;
+		fishSpot.drawObjects(textures);
+
 
 		switch (currentMenu) {
 		case NONE:
@@ -178,7 +202,7 @@ void App::OnRender() {
 			DrawText("INVENTORY", screenCornerX, screenCornerY, 100 / camera.zoom, RAYWHITE);
 			inventoryPage = 1;
 			for (size_t i = 0; i < player.fishInventory.size(); i++) {
-				DrawTexture(textures.getTexture("fish1"), screenCornerX + 100, screenCornerY + 100 + i * 128, WHITE);
+				DrawTexture(textures.getTexture("fish"), screenCornerX + 100, screenCornerY + 100 + i * 128, WHITE);
 
 				std::stringstream ss;
 				ss << mouseY;
@@ -189,7 +213,7 @@ void App::OnRender() {
 			if ((mouseX > 0) && (128 > mouseX) &&
 				(mouseY > 0) && (mouseY < 128) && player.fishInventory.size() > 0) {
 				// check which box is mouse in
-				DrawTexture(textures.getTexture("cod"), screenCornerX, screenCornerY, WHITE);
+				DrawTexture(textures.getTexture("fish"), screenCornerX, screenCornerY, WHITE);
 				DrawText(toString<double>(player.fishInventory[0].weight).c_str(), screenCornerX, screenCornerY, 50, RAYWHITE);
 			}
 			if ((mouseX > 0) && (128 > mouseX) &&
@@ -221,15 +245,18 @@ void App::OnRender() {
 		}
 		DrawText("FISH SHOP", 0 + 1, 0 + 1, 100, BLACK);
 		DrawText("FISH SHOP", 0 + 1, 0 + 1, 100, RAYWHITE);
-		DrawRectangle(0, 0 + GetScreenHeight()  / 3 * 2, GetScreenWidth(), GetScreenHeight() / 2, RAYWHITE);
+		//DrawRectangle(0, 0 + GetScreenHeight()  / 3 * 2, GetScreenWidth(), GetScreenHeight() / 2, RAYWHITE);
+		DrawRectangleGradientV(0, 0 + GetScreenHeight() / 3 * 2, GetScreenWidth(), GetScreenHeight() / 2, RAYWHITE, DARKGRAY);
 		DrawTextureEx(textures.getTexture("coin"), { 0, (float)GetScreenHeight() / 3 * 2 }, 0, 2.2 * scale_offset, WHITE);
 		DrawText(toString(player.gold).c_str(), 0 + (64 * scale_offset), 0 + GetScreenHeight() / 3 * 2 + (12 * scale_offset), 45 * scale_offset, BLACK);
 		switch (currentShopMenu) {
 		case NO:
 			shop_inv_rec = { (float)GetScreenWidth() / 4, (float)GetScreenHeight() / 3 * 2 + 8, (float)GetScreenWidth() / 5, (float)GetScreenHeight() / 10 };
 			DrawRectangleRounded(shop_inv_rec, 0.5, 4, LIGHTGRAY);
+			DrawTextEx(GetFontDefault(), "INVENTORY", { shop_inv_rec.x+20, shop_inv_rec.y+15 }, 25*scale_offset, 2, BLACK);
 			if (CheckCollisionPointRec(GetMousePosition(), shop_inv_rec)) {
 				DrawRectangleRounded(shop_inv_rec, 0.5, 4, DARKGRAY);
+				DrawTextEx(GetFontDefault(), "INVENTORY", { shop_inv_rec.x + 20, shop_inv_rec.y + 15 }, 25 * scale_offset, 2, RAYWHITE);
 				if (IsMouseButtonPressed(0)) {
 					currentShopMenu = SELL;
 				}
@@ -246,7 +273,7 @@ void App::OnRender() {
 					if (CheckCollisionPointRec(GetMousePosition(), fish1rec)) {
 						std::string temp;
 						temp.append(toString(player.fishInventory[0].m_name)).append("\n").append(toString(player.fishInventory[0].weight)).append("\n")
-							.append(toString(player.fishInventory[0].rarity));
+							.append(getRarityText((player.fishInventory[0].rarity)));
 						DrawTextBoxed(GetFontDefault(), temp.c_str(), fish1rec, 30 * scale_offset, 1, true, BLACK);
 						DrawRectangleRec(fish1rec, { 0,0,0,100 });
 						if (IsMouseButtonPressed(0)) {
@@ -284,7 +311,7 @@ void App::OnRender() {
 						if (CheckCollisionPointRec(GetMousePosition(), fish1rec)) {
 							std::string temp;
 							temp.append(toString(player.fishInventory[1].m_name)).append("\n").append(toString(player.fishInventory[1].weight)).append("\n")
-								.append(toString(player.fishInventory[1].rarity));
+								.append(getRarityText(player.fishInventory[1].rarity));
 							DrawTextBoxed(GetFontDefault(), temp.c_str(), fish1rec, 30 * scale_offset, 1, true, BLACK);
 							DrawRectangleRec(fish1rec, { 0,0,0,100 });
 							if (IsMouseButtonPressed(0)) {
@@ -320,13 +347,14 @@ void App::OnRender() {
 							if (CheckCollisionPointRec(GetMousePosition(), fish1rec)) {
 								std::string temp;
 								temp.append(toString(player.fishInventory[2].m_name)).append("\n").append(toString(player.fishInventory[2].weight)).append("\n")
-									.append(toString(player.fishInventory[2].rarity));
+									.append(getRarityText(player.fishInventory[2].rarity));
 								DrawTextBoxed(GetFontDefault(), temp.c_str(), fish1rec, 30 * scale_offset, 1, true, BLACK);
 								DrawRectangleRec(fish1rec, { 0,0,0,100 });
 								if (IsMouseButtonPressed(0)) {
 									player.fishInventory[2].selected = !player.fishInventory[2].selected;
 								}
 							}
+						}
 							else {
 								Rectangle rec = { (float)GetScreenWidth() / 6 * 3 - 20, (float)GetScreenHeight() / 3 * 2 , player.fishInventory[0].m_tex.width * scale_offset, (float)GetScreenHeight() / 3 };
 								DrawRectangleRec(rec, { 0,0,0,100 });
@@ -348,7 +376,7 @@ void App::OnRender() {
 							
 							
 							}
-						}
+						
 						if (player.fishInventory.size() > 3) {
 							DrawTextureEx(player.fishInventory[3].m_tex, { (float)GetScreenWidth() / 6 * 4 - 20, (float)GetScreenHeight() / 3 * 2 + (20 * scale_offset) }, 0, 1 * scale_offset, WHITE);
 							Rectangle fish1rec = { (float)GetScreenWidth() / 6 * 4 - 20, (float)GetScreenHeight() / 3 * 2 , player.fishInventory[0].m_tex.width * scale_offset, (float)GetScreenHeight() / 3 };
@@ -357,7 +385,7 @@ void App::OnRender() {
 								if (CheckCollisionPointRec(GetMousePosition(), fish1rec)) {
 									std::string temp;
 									temp.append(toString(player.fishInventory[3].m_name)).append("\n").append(toString(player.fishInventory[3].weight)).append("\n")
-										.append(toString(player.fishInventory[3].rarity));
+										.append(getRarityText(player.fishInventory[3].rarity));
 									DrawTextBoxed(GetFontDefault(), temp.c_str(), fish1rec, 30 * scale_offset, 1, true, BLACK);
 									DrawRectangleRec(fish1rec, { 0,0,0,100 });
 									if (IsMouseButtonPressed(0) ) {
@@ -392,7 +420,7 @@ void App::OnRender() {
 									if (CheckCollisionPointRec(GetMousePosition(), fish1rec)) {
 										std::string temp;
 										temp.append(toString(player.fishInventory[4].m_name)).append("\n").append(toString(player.fishInventory[4].weight)).append("\n")
-											.append(toString(player.fishInventory[4].rarity));
+											.append(getRarityText(player.fishInventory[4].rarity));
 										DrawTextBoxed(GetFontDefault(), temp.c_str(), fish1rec, 30 * scale_offset, 1, true, BLACK);
 										DrawRectangleRec(fish1rec, { 0,0,0,100 });
 										if (IsMouseButtonPressed(0)) {
@@ -586,3 +614,5 @@ void App::OnRender() {
 			if ((textOffsetX != 0) || (codepoint != ' ')) textOffsetX += glyphWidth;  // avoid leading spaces
 		}
 	}
+
+	
