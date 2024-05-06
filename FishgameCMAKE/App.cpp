@@ -70,6 +70,7 @@ void App::RunGame()
 	camera.offset = ofs;
 	camera.rotation = 0.0f;
 	camera.zoom = 3.0f;
+	player.gold = 290;
 
 }
 
@@ -222,7 +223,6 @@ void App::OnRender() {
 		DrawText("FISH SHOP", 0 + 1, 0 + 1, 100, RAYWHITE);
 		DrawRectangle(0, 0 + GetScreenHeight()  / 3 * 2, GetScreenWidth(), GetScreenHeight() / 2, RAYWHITE);
 		DrawTextureEx(textures.getTexture("coin"), { 0, (float)GetScreenHeight() / 3 * 2 }, 0, 2.2 * scale_offset, WHITE);
-		player.gold = 290;
 		DrawText(toString(player.gold).c_str(), 0 + (64 * scale_offset), 0 + GetScreenHeight() / 3 * 2 + (12 * scale_offset), 45 * scale_offset, BLACK);
 		switch (currentShopMenu) {
 		case NO:
@@ -241,53 +241,184 @@ void App::OnRender() {
 			}
 			if (!player.fishInventory.empty()) {
 				DrawTextureEx(player.fishInventory[0].m_tex, { (float)GetScreenWidth() / 6 - 20, (float)GetScreenHeight() / 3 * 2 + (20*scale_offset) }, 0, 1 * scale_offset, WHITE);
-				Rectangle fish1rec = { (float)GetScreenWidth() / 6 - 20, (float)GetScreenHeight() / 3 * 2 + (20 * scale_offset) , player.fishInventory[0].m_tex.width, player.fishInventory[0].m_tex.height };
-				if (CheckCollisionPointRec(GetMousePosition(), fish1rec)) {
-					DrawRectangleRounded(fish1rec, 0.5, 4, { 0,0,0,100 });
-					std::string temp;
-					temp.append(toString(player.fishInventory[0].m_name)).append("\n").append(toString(player.fishInventory[0].weight)).append("\n")
-						.append(toString(player.fishInventory[0].rarity));
-					DrawTextBoxed(GetFontDefault(), temp.c_str(), fish1rec, 30*scale_offset, 1, true, RAYWHITE);
-				}
+				Rectangle fish1rec = { (float)GetScreenWidth() / 6 - 20, (float)GetScreenHeight() / 3 * 2 , player.fishInventory[0].m_tex.width * scale_offset, (float)GetScreenHeight()/3};
+				if (!player.fishInventory[0].selected) {
+					if (CheckCollisionPointRec(GetMousePosition(), fish1rec)) {
+						std::string temp;
+						temp.append(toString(player.fishInventory[0].m_name)).append("\n").append(toString(player.fishInventory[0].weight)).append("\n")
+							.append(toString(player.fishInventory[0].rarity));
+						DrawTextBoxed(GetFontDefault(), temp.c_str(), fish1rec, 30 * scale_offset, 1, true, BLACK);
+						DrawRectangleRec(fish1rec, { 0,0,0,100 });
+						if (IsMouseButtonPressed(0)) {
+							if (!player.fishInventory.empty()) {
+								player.fishInventory[0].selected = !player.fishInventory[0].selected;
+							}
+						}
+					}
+
+				}else {
+						Rectangle rec = { (float)GetScreenWidth() / 6 - 20, (float)GetScreenHeight() / 3 * 2 , player.fishInventory[0].m_tex.width * scale_offset, (float)GetScreenHeight() / 3 };
+						DrawRectangleRec(rec, { 0,0,0,100 });
+						std::string temp;
+						temp.append("Sell ").append(player.fishInventory[0].m_name).append(" for ").append(toString(player.getGold(player.fishInventory[0]))).append(" gold?");
+						DrawTextBoxed(GetFontDefault(), temp.c_str(), rec, 25, 2, true, WHITE);
+						Rectangle confirmRec{ (float)GetScreenWidth() / 6 - 20, (float)GetScreenHeight() / 12 * 11 , player.fishInventory[0].m_tex.width * scale_offset, (float)GetScreenHeight() / 10 };
+						DrawRectangleRec(confirmRec, {0,0,0, 150});
+						DrawTextEx(GetFontDefault(), "CONFIRM", { (float)GetScreenWidth() / 6 - 20 + 5, (float)GetScreenHeight() / 12 * 11 + 5 }, 25, 2, RAYWHITE);
+						if (CheckCollisionPointRec(GetMousePosition(), confirmRec) && IsMouseButtonPressed(0)) {
+							std::cout << player.fishInventory[0].m_name << std::endl;
+							player.sellFish(player.fishInventory[0]);
+						}
+						if (IsMouseButtonPressed(0) && !CheckCollisionPointRec(GetMousePosition(), confirmRec)) {
+							if (!player.fishInventory.empty()) {
+								player.fishInventory[0].selected = !player.fishInventory[0].selected;
+							}
+						}
+					}
+				
 				if (player.fishInventory.size() > 1) {
 					DrawTextureEx(player.fishInventory[1].m_tex, { (float)GetScreenWidth() / 6 * 2 - 20, (float)GetScreenHeight() / 3*2 + (20 * scale_offset) }, 0, 1 * scale_offset, WHITE);
-					Rectangle fish1rec = { (float)GetScreenWidth() / 6 * 2 - 20, (float)GetScreenHeight() / 3 * 2 + (20 * scale_offset) , player.fishInventory[0].m_tex.width, player.fishInventory[0].m_tex.height };
-					if (CheckCollisionPointRec(GetMousePosition(), fish1rec)) {
-						DrawRectangleRounded(fish1rec, 0.5, 4, { 0,0,0,100 });
-						std::string temp;
-						temp.append(toString(player.fishInventory[1].m_name)).append("\n").append(toString(player.fishInventory[1].weight)).append("\n")
-							.append(toString(player.fishInventory[1].rarity));
-						DrawTextBoxed(GetFontDefault(), temp.c_str(), fish1rec, 30 * scale_offset, 1, true, RAYWHITE);
+					Rectangle fish1rec = { (float)GetScreenWidth() / 6 * 2 - 20, (float)GetScreenHeight() / 3 * 2 , player.fishInventory[0].m_tex.width * scale_offset, (float)GetScreenHeight() / 3 };
+					if (!player.fishInventory[1].selected) {
+					
+						if (CheckCollisionPointRec(GetMousePosition(), fish1rec)) {
+							std::string temp;
+							temp.append(toString(player.fishInventory[1].m_name)).append("\n").append(toString(player.fishInventory[1].weight)).append("\n")
+								.append(toString(player.fishInventory[1].rarity));
+							DrawTextBoxed(GetFontDefault(), temp.c_str(), fish1rec, 30 * scale_offset, 1, true, BLACK);
+							DrawRectangleRec(fish1rec, { 0,0,0,100 });
+							if (IsMouseButtonPressed(0)) {
+								player.fishInventory[1].selected = !player.fishInventory[1].selected;
+							}
+						}
 					}
+					else {
+						Rectangle rec = { (float)GetScreenWidth() / 6 * 2 - 20, (float)GetScreenHeight() / 3 * 2 , player.fishInventory[0].m_tex.width * scale_offset, (float)GetScreenHeight() / 3 };
+						DrawRectangleRec(rec, { 0,0,0,100 });
+						std::string temp;
+						temp.append("Sell ").append(player.fishInventory[1].m_name).append(" for ").append(toString(player.getGold(player.fishInventory[1]))).append(" gold?");
+						DrawTextBoxed(GetFontDefault(), temp.c_str(), rec, 25, 2, true, WHITE);
+						Rectangle confirmRec{ (float)GetScreenWidth() / 6 * 2- 20, (float)GetScreenHeight() / 12 * 11 , player.fishInventory[1].m_tex.width * scale_offset, (float)GetScreenHeight() / 10 };
+						DrawRectangleRec(confirmRec, { 0,0,0, 150 });
+						DrawTextEx(GetFontDefault(), "CONFIRM", { (float)GetScreenWidth() / 6  * 2 - 20 + 5, (float)GetScreenHeight() / 12 * 11 + 5 }, 25, 2, RAYWHITE);
+						if (CheckCollisionPointRec(GetMousePosition(), confirmRec) && IsMouseButtonPressed(0)) {
+							std::cout << player.fishInventory[1].m_name << std::endl;
+							player.sellFish(player.fishInventory[1]);
+						}
+						if (IsMouseButtonPressed(0) && !CheckCollisionPointRec(GetMousePosition(), confirmRec)) {
+							if (!player.fishInventory.empty()) {
+								player.fishInventory[1].selected = !player.fishInventory[1].selected;
+							}
+						}
+					
+					}
+
 					if (player.fishInventory.size() > 2) {
 						DrawTextureEx(player.fishInventory[2].m_tex, { (float)GetScreenWidth() / 6 * 3 - 20, (float)GetScreenHeight() / 3*2 + (20 * scale_offset) }, 0, 1 * scale_offset, WHITE);
-						Rectangle fish1rec = { (float)GetScreenWidth() / 6 * 3 - 20, (float)GetScreenHeight() / 3 * 2 + (20 * scale_offset) , player.fishInventory[0].m_tex.width, player.fishInventory[0].m_tex.height };
-						if (CheckCollisionPointRec(GetMousePosition(), fish1rec)) {
-							DrawRectangleRounded(fish1rec, 0.5, 4, { 0,0,0,100 });
-							std::string temp;
-							temp.append(toString(player.fishInventory[2].m_name)).append("\n").append(toString(player.fishInventory[2].weight)).append("\n")
-								.append(toString(player.fishInventory[2].rarity));
-							DrawTextBoxed(GetFontDefault(), temp.c_str(), fish1rec, 30 * scale_offset, 1, true, RAYWHITE);
+						Rectangle fish1rec = { (float)GetScreenWidth() / 6 * 3 - 20, (float)GetScreenHeight() / 3 * 2 , player.fishInventory[0].m_tex.width * scale_offset, (float)GetScreenHeight() / 3 };
+						if (!player.fishInventory[2].selected) {
+							if (CheckCollisionPointRec(GetMousePosition(), fish1rec)) {
+								std::string temp;
+								temp.append(toString(player.fishInventory[2].m_name)).append("\n").append(toString(player.fishInventory[2].weight)).append("\n")
+									.append(toString(player.fishInventory[2].rarity));
+								DrawTextBoxed(GetFontDefault(), temp.c_str(), fish1rec, 30 * scale_offset, 1, true, BLACK);
+								DrawRectangleRec(fish1rec, { 0,0,0,100 });
+								if (IsMouseButtonPressed(0)) {
+									player.fishInventory[2].selected = !player.fishInventory[2].selected;
+								}
+							}
+							else {
+								Rectangle rec = { (float)GetScreenWidth() / 6 * 3 - 20, (float)GetScreenHeight() / 3 * 2 , player.fishInventory[0].m_tex.width * scale_offset, (float)GetScreenHeight() / 3 };
+								DrawRectangleRec(rec, { 0,0,0,100 });
+								std::string temp;
+								temp.append("Sell ").append(player.fishInventory[2].m_name).append(" for ").append(toString(player.getGold(player.fishInventory[2]))).append(" gold?");
+								DrawTextBoxed(GetFontDefault(), temp.c_str(), rec, 25, 2, true, WHITE);
+								Rectangle confirmRec{ (float)GetScreenWidth() / 6 * 3 - 20, (float)GetScreenHeight() / 12 * 11 , player.fishInventory[2].m_tex.width * scale_offset, (float)GetScreenHeight() / 10 };
+								DrawRectangleRec(confirmRec, { 0,0,0, 150 });
+								DrawTextEx(GetFontDefault(), "CONFIRM", { (float)GetScreenWidth() / 6 * 3 - 20 + 5, (float)GetScreenHeight() / 12 * 11 + 5 }, 25, 2, RAYWHITE);
+								if (CheckCollisionPointRec(GetMousePosition(), confirmRec) && IsMouseButtonPressed(0)) {
+									std::cout << player.fishInventory[2].m_name << std::endl;
+									player.sellFish(player.fishInventory[2]);
+								}
+								if (IsMouseButtonPressed(0) && !CheckCollisionPointRec(GetMousePosition(), confirmRec)) {
+									if (player.fishInventory.size() > 2) {
+										player.fishInventory[2].selected = !player.fishInventory[2].selected;
+									}
+								}
+							
+							
+							}
 						}
 						if (player.fishInventory.size() > 3) {
 							DrawTextureEx(player.fishInventory[3].m_tex, { (float)GetScreenWidth() / 6 * 4 - 20, (float)GetScreenHeight() / 3 * 2 + (20 * scale_offset) }, 0, 1 * scale_offset, WHITE);
-							Rectangle fish1rec = { (float)GetScreenWidth() / 6 * 4 - 20, (float)GetScreenHeight() / 3 * 2 + (20 * scale_offset) , player.fishInventory[0].m_tex.width, player.fishInventory[0].m_tex.height };
-							if (CheckCollisionPointRec(GetMousePosition(), fish1rec)) {
-								DrawRectangleRounded(fish1rec, 0.5, 4, { 0,0,0,100 });
+							Rectangle fish1rec = { (float)GetScreenWidth() / 6 * 4 - 20, (float)GetScreenHeight() / 3 * 2 , player.fishInventory[0].m_tex.width * scale_offset, (float)GetScreenHeight() / 3 };
+							
+							if (!player.fishInventory[3].selected) {
+								if (CheckCollisionPointRec(GetMousePosition(), fish1rec)) {
+									std::string temp;
+									temp.append(toString(player.fishInventory[3].m_name)).append("\n").append(toString(player.fishInventory[3].weight)).append("\n")
+										.append(toString(player.fishInventory[3].rarity));
+									DrawTextBoxed(GetFontDefault(), temp.c_str(), fish1rec, 30 * scale_offset, 1, true, BLACK);
+									DrawRectangleRec(fish1rec, { 0,0,0,100 });
+									if (IsMouseButtonPressed(0) ) {
+										player.fishInventory[3].selected = !player.fishInventory[3].selected;
+									}
+								}
+							}
+							else {
+								Rectangle rec = { (float)GetScreenWidth() / 6 * 4 - 20, (float)GetScreenHeight() / 3 * 2 , player.fishInventory[0].m_tex.width * scale_offset, (float)GetScreenHeight() / 3 };
+								DrawRectangleRec(rec, { 0,0,0,100 });
 								std::string temp;
-								temp.append(toString(player.fishInventory[3].m_name)).append("\n").append(toString(player.fishInventory[3].weight)).append("\n")
-									.append(toString(player.fishInventory[3].rarity));
-								DrawTextBoxed(GetFontDefault(), temp.c_str(), fish1rec, 30 * scale_offset, 1, true, RAYWHITE);
+								temp.append("Sell ").append(player.fishInventory[3].m_name).append(" for ").append(toString(player.getGold(player.fishInventory[3]))).append(" gold?");
+								DrawTextBoxed(GetFontDefault(), temp.c_str(), rec, 25, 2, true, WHITE);
+								Rectangle confirmRec{ (float)GetScreenWidth() / 6 * 4 - 20, (float)GetScreenHeight() / 12 * 11 , player.fishInventory[3].m_tex.width * scale_offset, (float)GetScreenHeight() / 10 };
+								DrawRectangleRec(confirmRec, { 0,0,0, 150 });
+								DrawTextEx(GetFontDefault(), "CONFIRM", { (float)GetScreenWidth() / 6 * 4 - 20 + 5, (float)GetScreenHeight() / 12 * 11 + 5 }, 25, 2, RAYWHITE);
+								if (CheckCollisionPointRec(GetMousePosition(), confirmRec) && IsMouseButtonPressed(0)) {
+									std::cout << player.fishInventory[3].m_name << std::endl;
+									player.sellFish(player.fishInventory[3]);
+								}
+								if (IsMouseButtonPressed(0) && !CheckCollisionPointRec(GetMousePosition(), confirmRec)) {
+									if (player.fishInventory.size() > 3) {
+										player.fishInventory[3].selected = !player.fishInventory[3].selected;
+									}
+								}
+						
 							}
 							if (player.fishInventory.size() > 4) {
 								DrawTextureEx(player.fishInventory[4].m_tex, { (float)GetScreenWidth()/ 6 * 5 - 20, (float)GetScreenHeight()/3*2 + (20 * scale_offset) }, 0, 1 * scale_offset, WHITE);
-								Rectangle fish1rec = { (float)GetScreenWidth() / 6 * 5 - 20, (float)GetScreenHeight() / 3 * 2 + (20 * scale_offset) , player.fishInventory[0].m_tex.width, player.fishInventory[0].m_tex.height };
-								if (CheckCollisionPointRec(GetMousePosition(), fish1rec)) {
-									DrawRectangleRounded(fish1rec, 0.5, 4, { 0,0,0,100 });
+								Rectangle fish1rec = { (float)GetScreenWidth() / 6 * 5- 20, (float)GetScreenHeight() / 3 * 2 , player.fishInventory[0].m_tex.width * scale_offset, (float)GetScreenHeight() / 3 };
+								if (!player.fishInventory[4].selected) {
+									if (CheckCollisionPointRec(GetMousePosition(), fish1rec)) {
+										std::string temp;
+										temp.append(toString(player.fishInventory[4].m_name)).append("\n").append(toString(player.fishInventory[4].weight)).append("\n")
+											.append(toString(player.fishInventory[4].rarity));
+										DrawTextBoxed(GetFontDefault(), temp.c_str(), fish1rec, 30 * scale_offset, 1, true, BLACK);
+										DrawRectangleRec(fish1rec, { 0,0,0,100 });
+										if (IsMouseButtonPressed(0)) {
+											player.fishInventory[4].selected = !player.fishInventory[4].selected;
+										}
+									}
+								}
+								else {
+									Rectangle rec = { (float)GetScreenWidth() / 6 * 5 - 20, (float)GetScreenHeight() / 3 * 2 , player.fishInventory[0].m_tex.width * scale_offset, (float)GetScreenHeight() / 3 };
+									DrawRectangleRec(rec, { 0,0,0,100 });
 									std::string temp;
-									temp.append(toString(player.fishInventory[4].m_name)).append("\n").append(toString(player.fishInventory[4].weight)).append("\n")
-										.append(toString(player.fishInventory[4].rarity));
-									DrawTextBoxed(GetFontDefault(), temp.c_str(), fish1rec, 30 * scale_offset, 1, true, RAYWHITE);
+									temp.append("Sell ").append(player.fishInventory[4].m_name).append(" for ").append(toString(player.getGold(player.fishInventory[4]))).append(" gold?");
+									DrawTextBoxed(GetFontDefault(), temp.c_str(), rec, 25, 2, true, WHITE);
+									Rectangle confirmRec{ (float)GetScreenWidth() / 6 * 5 - 20, (float)GetScreenHeight() / 12 * 11 , player.fishInventory[4].m_tex.width * scale_offset, (float)GetScreenHeight() / 10 };
+									DrawRectangleRec(confirmRec, { 0,0,0, 150 });
+									DrawTextEx(GetFontDefault(), "CONFIRM", { (float)GetScreenWidth() / 6 * 5 - 20 + 5, (float)GetScreenHeight() / 12 * 11 + 5 }, 25, 2, RAYWHITE);
+									if (CheckCollisionPointRec(GetMousePosition(), confirmRec) && IsMouseButtonPressed(0)) {
+										std::cout << player.fishInventory[4].m_name << std::endl;
+										player.sellFish(player.fishInventory[4]);
+									}
+									if (IsMouseButtonPressed(0) && !CheckCollisionPointRec(GetMousePosition(), confirmRec)) {
+										if (player.fishInventory.size() > 4) {
+											player.fishInventory[4].selected = !player.fishInventory[4].selected;
+										}
+									}
+								
 								}
 							}
 						}

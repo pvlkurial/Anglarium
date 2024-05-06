@@ -4,11 +4,14 @@
 #include <string>
 #include <iostream>
 #include "CTextureManager.h"
+#include <algorithm>
+#include <vector>
 
 class Fish {
 public:
     Fish(int rodLuck, int playerLuck, int playerSkill, int playerLevel, int rodStrength, CTextureManager& texman);
     int getRarity(int rodLuck, int playerLuck, int playerSkill) const;
+
 
     std::string m_name;
     std::string prefix = "prefix";
@@ -16,6 +19,8 @@ public:
     Texture2D m_tex;
     int rarity;
     double weight;
+    bool selected;
 
+    bool operator == (const Fish& src);
 
 };

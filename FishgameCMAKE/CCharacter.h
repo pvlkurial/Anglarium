@@ -3,9 +3,10 @@
 #include "CTools.h"
 #include "CFishing.h"
 #include "raylib.h"
+#include "CTextureManager.h"
 #include <iostream>
 #include <vector>
-#include "CTextureManager.h"
+#include <algorithm>
 
 class CCharacter {
 	Texture2D char_tex;
@@ -34,4 +35,6 @@ public:
 	bool checkCollision(CFishingSpot& fishSpot, Texture2D& pop_tex) const;
 	bool checkShopCollision(CShop& shops) const;
 	void update();
+	void sellFish(Fish & fish);
+	int getGold(Fish & fish);
 };

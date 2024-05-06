@@ -6,6 +6,7 @@
 #include "iostream"
 #include "CPopups.h"
 #include "Fish.h"
+#include <algorithm>
 
 CCharacter::CCharacter(int posX, int posY) : m_posX(posX), m_posY(posY), skill(1), luck(1), level(1), xp(0) {
 	m_colRec = { static_cast<float>(m_posX), static_cast<float>(m_posY), 20, 20 };
@@ -25,8 +26,12 @@ void CCharacter::fish(CFishingSpot& fishSpot, Texture2D& pop_tex, CTextureManage
             std::cout << "Inventory Full" << std::endl;
             return;
         }
-	    fishInventory.push_back(Fish(rod.luck, luck, skill, level, rod.strenght, texman));
+        Fish fish(rod.luck, luck, skill, level, rod.strenght, texman);
+	    fishInventory.push_back(fish);
+        std::cout << xp << " + " << 1.246 * level * ((fish.rarity ^ 2) * 0.267) * fish.weight * 100 << std::endl;
+        xp += 1.246 * level * ((fish.rarity ^ 2) * 0.267) * fish.weight * 100;
         std::cout << "Caught a fish" << std::endl;
+        update();
         return;
     }
     std::cout << "Not in a fishZone" << std::endl;
@@ -125,7 +130,22 @@ void CCharacter::loadTexture(const Texture2D& tex){
 }
 
 void CCharacter::update() {
-    std::cout << "update player" << std::endl;
+    if (xp > 150) {
+        level = 2;
+        if (xp > 750) {
+            level = 3;
+            if(xp > 3125){
+                level = 4;
+                if (xp > 13258) {
+                    level = 5;
+                    if (xp > 38905) {
+                        level = 6;
+                    }
+                }
+            }
+        }
+    }
+    std::cout << "LEVEL: " << level << std::endl;
 }
 
 bool CCharacter::checkShopCollision(CShop & shop) const {
@@ -136,4 +156,17 @@ bool CCharacter::checkShopCollision(CShop & shop) const {
         }
     }
     return false;
+}
+
+int CCharacter::getGold(Fish& fish) {
+    return (fish.rarity + 1.5) * fish.weight * luck * 0.522 * 25;
+}
+
+void CCharacter::sellFish(Fish& fish) {
+    gold += (fish.rarity + 1.5) * fish.weight * luck * 0.522 * 25 * (level * 1.767);
+    std::cout << (fish.rarity + 1.5) * fish.weight * luck * 0.522 * 25 * (level*1.767) << std::endl;
+    auto it = std::find(fishInventory.begin(), fishInventory.end(), fish);
+    if (it != fishInventory.end()) {
+        fishInventory.erase(it);
+    }
 }

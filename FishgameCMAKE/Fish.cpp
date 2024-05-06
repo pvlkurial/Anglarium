@@ -1,9 +1,10 @@
 #include "Fish.h"
 #include "raylib.h"
 #include "raymath.h"
+#include "CCharacter.h"
 #include <string>
 #include <iostream>
-#include "CCharacter.h"
+#include <vector>
     
     int Fish::getRarity(int rodLuck, int playerLuck, int playerSkill) const {
         float temp = GetRandomValue(0, 50000/(rodLuck * playerLuck * playerSkill * 1.000));
@@ -31,6 +32,7 @@
     Fish::Fish(int rodLuck, int playerLuck, int playerSkill, int playerLevel, int rodStrength, CTextureManager & texman)  {
         weight = (GetRandomValue(0, 5) * rodStrength * (playerLevel / 5.000) + 1.000*playerSkill*playerLuck) / 10.000;
         rarity = getRarity(rodLuck, playerLuck, playerSkill);
+        selected = false;
         switch (GetRandomValue(0, 5)) {
         case 0:
             m_name = "Joel";
@@ -63,4 +65,8 @@
         break;
         }
 
+    }
+
+    bool Fish::operator == (const Fish& src) {
+        if (m_name == src.m_name && rarity == src.rarity && weight == src.weight) return true;
     }
