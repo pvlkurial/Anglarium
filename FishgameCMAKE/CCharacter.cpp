@@ -7,12 +7,20 @@
 #include "CPopups.h"
 #include "Fish.h"
 #include <algorithm>
+#include <sstream>
 
-CCharacter::CCharacter(int posX, int posY) : m_posX(posX), m_posY(posY), skill(1), luck(1), level(1), xp(0) {
+template<typename T>
+std::string toString(const T& src) {
+    std::stringstream is;
+    is << src;
+    return is.str();
+}
+
+CCharacter::CCharacter(int posX, int posY) : m_posX(posX), m_posY(posY), skill(1), luck(1), level(1), xp(0), qtime(0) {
 	m_colRec = { static_cast<float>(m_posX), static_cast<float>(m_posY), 20, 20 };
 }
 
-CCharacter::CCharacter(): m_posX(GetScreenWidth() / 2), m_posY(GetScreenHeight() / 2), skill(1), luck(1), level(1), xp(0) {}
+CCharacter::CCharacter(): m_posX(GetScreenWidth() / 2), m_posY(GetScreenHeight() / 2), skill(1), luck(1), level(1), xp(0), qtime(0) {}
 
 void CCharacter::charUpdate() {
 	m_colRec = { static_cast<float>(m_posX), static_cast<float>(m_posY), 20, 20 };
@@ -31,6 +39,7 @@ void CCharacter::fish(CFishingSpot& fishSpot, Texture2D& pop_tex, CTextureManage
         std::cout << xp << " + " << 1.246 * level * ((fish.rarity ^ 2) * 0.267) * fish.weight * 100 << std::endl;
         xp += 1.246 * level * ((fish.rarity ^ 2) * 0.267) * fish.weight * 100;
         std::cout << "Caught a fish" << std::endl;
+        popupQ.push_back("xp");
         update();
         return;
     }
@@ -169,4 +178,22 @@ void CCharacter::sellFish(Fish& fish) {
     if (it != fishInventory.end()) {
         fishInventory.erase(it);
     }
+}
+
+void CCharacter::displayQ() {
+    //every 60 frames pop back
+    int opacity = 100;
+    qtime++;
+    if (qtime > 360) {
+        qtime = 0;
+        if (!popupQ.empty()) {
+            popupQ.pop_back();
+        }
+    }
+    int i = 1;
+    for (const auto& item : popupQ) {
+        DrawTextEx(GetFontDefault(), item.c_str(), { (float)m_posX - 30, (float)m_posY - qtime/60 - 30 }, 25, 2, { 255,255,255, 255 });
+        i++;
+    }
+
 }

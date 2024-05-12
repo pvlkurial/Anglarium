@@ -7,6 +7,7 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <deque>
 
 class CCharacter {
 	Texture2D char_tex;
@@ -21,7 +22,9 @@ public:
 	int level;
 	CFishingRod rod;
 	long gold;
+	int qtime;
 
+	std::deque<std::string> popupQ;
 
 	int m_posX;
 	int m_posY;
@@ -37,4 +40,5 @@ public:
 	void update();
 	void sellFish(Fish & fish);
 	int getGold(Fish & fish);
+	void displayQ();
 };
