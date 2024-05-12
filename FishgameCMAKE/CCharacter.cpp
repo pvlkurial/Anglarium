@@ -39,7 +39,9 @@ void CCharacter::fish(CFishingSpot& fishSpot, Texture2D& pop_tex, CTextureManage
         std::cout << xp << " + " << 1.246 * level * ((fish.rarity ^ 2) * 0.267) * fish.weight * 100 << std::endl;
         xp += 1.246 * level * ((fish.rarity ^ 2) * 0.267) * fish.weight * 100;
         std::cout << "Caught a fish" << std::endl;
-        popupQ.push_back("xp");
+        std::string temp;
+        temp.append("+").append(toString(xp));
+        popupQ.push_back(temp);
         update();
         return;
     }
@@ -140,14 +142,29 @@ void CCharacter::loadTexture(const Texture2D& tex){
 
 void CCharacter::update() {
     if (xp > 150) {
+        if (level < 2) {
+            skill_points += 5;
+        }
         level = 2;
         if (xp > 750) {
+            if (level < 3) {
+                skill_points += 5;
+            }
             level = 3;
             if(xp > 3125){
+                if (level < 4) {
+                    skill_points += 5;
+                }
                 level = 4;
                 if (xp > 13258) {
+                    if (level < 5) {
+                        skill_points += 7;
+                    }
                     level = 5;
                     if (xp > 38905) {
+                        if (level < 6) {
+                            skill_points += 7;
+                        }
                         level = 6;
                     }
                 }
@@ -184,16 +201,16 @@ void CCharacter::displayQ() {
     //every 60 frames pop back
     int opacity = 100;
     qtime++;
-    if (qtime > 360) {
+    if (qtime > 120) {
         qtime = 0;
         if (!popupQ.empty()) {
-            popupQ.pop_back();
+            popupQ.pop_front();
         }
     }
     int i = 1;
-    for (const auto& item : popupQ) {
-        DrawTextEx(GetFontDefault(), item.c_str(), { (float)m_posX - 30, (float)m_posY - qtime/60 - 30 }, 25, 2, { 255,255,255, 255 });
-        i++;
+    for (size_t i = 0; i < popupQ.size(); ++i) {
+        DrawTextEx(GetFontDefault(), popupQ[i].c_str(), { (float)m_posX - 15, (float)m_posY - qtime / 15 - 30 + 10*i }, 15, 2, { 255,255,255, 180 });
     }
+
 
 }

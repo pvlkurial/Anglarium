@@ -13,12 +13,12 @@ class App {
 	Camera2D camera;
 	CShop shops;
 	CSoundManager soundsMan;
-	typedef enum GameScreen { LOGO = 0, TITLE, GAMEPLAY, SHOP, PAUSE, ENDING} GameScreen;
+	typedef enum GameScreen { LOGO = 0, TITLE, GAMEPLAY, SHOP, INV, PAUSE, ENDING} GameScreen;
 	typedef enum ActiveMenu { NONE = 0, INVENTORY } ActiveMenu;
-	typedef enum ShopMenu { NO = 0 , SELL} ShopMenu;
+	typedef enum ShopMenu { NO = 0 , SELL, BUY, TALK} ShopMenu;
 
-	ActiveMenu currentMenu;
 	GameScreen currentScreen;
+	ActiveMenu currentMenu;
 	ShopMenu currentShopMenu;
 
 	const float screenHeight = 1080 / 2;

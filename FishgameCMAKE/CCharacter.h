@@ -23,6 +23,7 @@ public:
 	CFishingRod rod;
 	long gold;
 	int qtime;
+	int skill_points;
 
 	std::deque<std::string> popupQ;
 

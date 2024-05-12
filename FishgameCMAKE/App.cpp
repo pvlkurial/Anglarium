@@ -156,6 +156,10 @@ void App::OnRender() {
 	Rectangle mouseRec;
 	Rectangle shop_inv_rec;
 	Rectangle shop_talk_rec;
+	Rectangle shop_buy_rec;
+
+	Rectangle inv_skill_skill;
+	Rectangle inv_skill_luck;
 	Vector2 trgt;
 	float scale_offset = sqrt((GetScreenHeight() * GetScreenHeight()) / (540 * 540));
 
@@ -205,11 +209,11 @@ void App::OnRender() {
 		break;
 
 	case GAMEPLAY:
-		
+
 		if (IsKeyPressed(KEY_Q)) {
 			currentScreen = PAUSE;
 		}
-		if (IsKeyPressed(KEY_E) && player.checkShopCollision(shops)){
+		if (IsKeyPressed(KEY_E) && player.checkShopCollision(shops)) {
 			currentScreen = SHOP;
 		}
 
@@ -229,7 +233,7 @@ void App::OnRender() {
 		switch (currentMenu) {
 		case NONE:
 			if (IsKeyPressed(KEY_E) && !player.checkShopCollision(shops)) {
-				currentMenu = INVENTORY;
+				currentScreen = INV;
 			}
 			player.kbListen(fishSpot, textures.getTexture("popup_bg"), shops, soundsMan, camera, textures);
 			camera.zoom += ((float)GetMouseWheelMove() * 0.05f);
@@ -241,22 +245,50 @@ void App::OnRender() {
 			if (IsKeyPressed(KEY_E)) {
 				currentMenu = NONE;
 			}
-			DrawText("INVENTORY", screenCornerX + 1, screenCornerY + 1, 100 / camera.zoom, BLACK);
-			DrawText("INVENTORY", screenCornerX, screenCornerY, 100 / camera.zoom, RAYWHITE);
+			DrawText("INVENTORY", screenCornerX + 1, screenCornerY + 1, 50 / camera.zoom, BLACK);
+			DrawText("INVENTORY", screenCornerX, screenCornerY, 50 / camera.zoom, RAYWHITE);
+
+			DrawText("SKILL POINTS", screenCornerX + GetScreenWidth() / camera.zoom - 100, screenCornerY, 50 / camera.zoom, RAYWHITE);
+			DrawText(toString(player.skill_points).c_str(), screenCornerX + GetScreenWidth() / camera.zoom - 50, screenCornerY + 20, 50 / camera.zoom, BLACK);
+
+			inv_skill_skill = { screenCornerX + GetScreenWidth() / camera.zoom - 100 / camera.zoom, (float)screenCornerY + 100 / camera.zoom, 100 / camera.zoom, 50 / camera.zoom };
+			inv_skill_luck = { screenCornerX + GetScreenWidth() / camera.zoom - 100 / camera.zoom, (float)screenCornerY + 150 / camera.zoom, 100 / camera.zoom, 50 / camera.zoom };
+			DrawRectangleRounded(inv_skill_skill, 0.5, 4, DARKGRAY);
+			DrawRectangleRounded(inv_skill_luck, 0.5, 4, DARKGRAY);
+			DrawTextEx(GetFontDefault(), "+", { inv_skill_skill.x + 10, inv_skill_skill.y + 5 }, 10 * scale_offset, 2, RAYWHITE);
+			DrawTextEx(GetFontDefault(), "+", { inv_skill_luck.x + 10, inv_skill_luck.y + 5 }, 10 * scale_offset, 2, RAYWHITE);
+
+			if (CheckCollisionPointRec({ GetMousePosition().x / 2 - GetMousePosition().x + player.m_posX,
+				(GetMousePosition().y / 2 - GetMousePosition().y + player.m_posY) / camera.zoom }, inv_skill_luck)) {
+
+				DrawRectangleRounded(inv_skill_luck, 0.5, 4, DARKGRAY);
+				DrawTextEx(GetFontDefault(), "+", { inv_skill_luck.x + 10, inv_skill_luck.y + 5 }, 10 * scale_offset, 2, RAYWHITE);
+				if (IsMouseButtonPressed(0)) {
+					if (player.skill_points > 0) {
+						player.luck++;
+						player.skill_points--;
+					}
+				}
+			}
+			if (CheckCollisionPointRec(GetMousePosition(), inv_skill_skill)) {
+				DrawRectangleRounded(inv_skill_skill, 0.5, 4, DARKGRAY);
+				DrawTextEx(GetFontDefault(), "+", { inv_skill_skill.x + 10, inv_skill_skill.y + 5 }, 10 * scale_offset, 2, RAYWHITE);
+				if (IsMouseButtonPressed(0)) {
+					if (player.skill_points > 0) {
+						player.skill++;
+						player.skill_points--;
+					}
+				}
+			}
+
 			inventoryPage = 1;
 			for (size_t i = 0; i < player.fishInventory.size(); i++) {
-				DrawTexture(textures.getTexture("fish"), screenCornerX + 100, screenCornerY + 100 + i * 128, WHITE);
-
-				std::stringstream ss;
-				ss << mouseY;
-
-				DrawText(ss.str().c_str(), player.m_posX, player.m_posY, 20, WHITE);
-
+				DrawTexture(textures.getTexture("cod"), screenCornerX + 100, screenCornerY + 100 + i * 128, WHITE);
 			}
 			if ((mouseX > 0) && (128 > mouseX) &&
 				(mouseY > 0) && (mouseY < 128) && player.fishInventory.size() > 0) {
 				// check which box is mouse in
-				DrawTexture(textures.getTexture("fish"), screenCornerX, screenCornerY, WHITE);
+				DrawTexture(textures.getTexture("cod"), screenCornerX, screenCornerY, WHITE);
 				DrawText(toString<double>(player.fishInventory[0].weight).c_str(), screenCornerX, screenCornerY, 50, RAYWHITE);
 			}
 			if ((mouseX > 0) && (128 > mouseX) &&
@@ -285,6 +317,7 @@ void App::OnRender() {
 	case SHOP:
 		if (IsKeyPressed(KEY_E)) {
 			currentScreen = GAMEPLAY;
+			player.popupQ.erase(player.popupQ.begin(), player.popupQ.end());
 		}
 		DrawText("FISH SHOP", 0 + 1, 0 + 1, 100, BLACK);
 		DrawText("FISH SHOP", 0 + 1, 0 + 1, 100, RAYWHITE);
@@ -295,8 +328,11 @@ void App::OnRender() {
 		switch (currentShopMenu) {
 		case NO:
 			shop_inv_rec = { (float)GetScreenWidth() / 4, (float)GetScreenHeight() / 3 * 2 + 8, (float)GetScreenWidth() / 5, (float)GetScreenHeight() / 10 };
+			shop_buy_rec = { (float)GetScreenWidth() / 4 * 2, (float)GetScreenHeight() / 3 * 2 + 8, (float)GetScreenWidth() / 5, (float)GetScreenHeight() / 10 };
 			DrawRectangleRounded(shop_inv_rec, 0.5, 4, LIGHTGRAY);
-			DrawTextEx(GetFontDefault(), "INVENTORY", { shop_inv_rec.x+20, shop_inv_rec.y+15 }, 25*scale_offset, 2, BLACK);
+			DrawRectangleRounded(shop_buy_rec, 0.5, 4, LIGHTGRAY);
+			DrawTextEx(GetFontDefault(), "INVENTORY", { shop_inv_rec.x + 20, shop_inv_rec.y + 15 }, 25 * scale_offset, 2, BLACK);
+			DrawTextEx(GetFontDefault(), "BUY ITEMS", { shop_buy_rec.x + 20, shop_buy_rec.y + 15 }, 25 * scale_offset, 2, BLACK);
 			if (CheckCollisionPointRec(GetMousePosition(), shop_inv_rec)) {
 				DrawRectangleRounded(shop_inv_rec, 0.5, 4, DARKGRAY);
 				DrawTextEx(GetFontDefault(), "INVENTORY", { shop_inv_rec.x + 20, shop_inv_rec.y + 15 }, 25 * scale_offset, 2, RAYWHITE);
@@ -304,50 +340,102 @@ void App::OnRender() {
 					currentShopMenu = SELL;
 				}
 			}
-		break;
+			if (CheckCollisionPointRec(GetMousePosition(), shop_buy_rec)) {
+				DrawRectangleRounded(shop_buy_rec, 0.5, 4, DARKGRAY);
+				DrawTextEx(GetFontDefault(), "BUY ITEMS", { shop_buy_rec.x + 20, shop_buy_rec.y + 15 }, 25 * scale_offset, 2, RAYWHITE);
+				if (IsMouseButtonPressed(0)) {
+					currentShopMenu = BUY;
+				}
+			}
+
+			break;
 		case SELL:
-			if(IsKeyPressed(KEY_BACKSPACE)){
+			if (IsKeyPressed(KEY_BACKSPACE)) {
 				currentShopMenu = NO;
 			}
 			if (!player.fishInventory.empty()) {
 				fish_in_shop_inventory(player, 0, scale_offset);
-				
+
 				if (player.fishInventory.size() > 1) {
 					fish_in_shop_inventory(player, 1, scale_offset);
 
 					if (player.fishInventory.size() > 2) {
 						fish_in_shop_inventory(player, 2, scale_offset);
-							
+
 						if (player.fishInventory.size() > 3) {
 							fish_in_shop_inventory(player, 3, scale_offset);
 
 							if (player.fishInventory.size() > 4) {
 								fish_in_shop_inventory(player, 4, scale_offset);
-								
+
 							}
 						}
 					}
-				
+
 				}
 			}
 			else {
-				DrawText("INVENTORY IS EMPTY", (float)GetScreenWidth() / 3, (float)GetScreenHeight() / 3 * 2 + 20, 35*scale_offset, BLACK);
+				DrawText("INVENTORY IS EMPTY", (float)GetScreenWidth() / 3, (float)GetScreenHeight() / 3 * 2 + 20, 35 * scale_offset, BLACK);
 			}
 
-		break;
+			break;
+		case BUY:
+			if (IsKeyPressed(KEY_BACKSPACE)) {
+				currentShopMenu = NO;
+			}
+			break;
 		default:
-		break;
-		
+			break;
+
 		}
 
+	case INV:
+
+		if (IsKeyPressed(KEY_E)) {
+			currentScreen = GAMEPLAY;
+		}
+		DrawText("INVENTORY", 1, 1, 50, BLACK);
+		DrawText("INVENTORY", 0, 0, 50, RAYWHITE);
+
+		DrawText("SKILL POINTS", GetScreenWidth() / 8 * 4, 0, 50 * scale_offset, RAYWHITE);
+		DrawText(toString(player.skill_points).c_str(), GetScreenWidth() / 8 * 7 + 50, 0, 50*scale_offset, WHITE);
+
+		inv_skill_skill = { (float)GetScreenWidth() - 100 , 100 , 100 , 50 };
+		inv_skill_luck = { (float)GetScreenWidth() - 100 ,  150 , 100 , 50 };
+		DrawRectangleRounded(inv_skill_skill, 0.5, 4, DARKGRAY);
+		DrawRectangleRounded(inv_skill_luck, 0.5, 4, DARKGRAY);
+		DrawTextEx(GetFontDefault(), "+", { inv_skill_skill.x + 10, inv_skill_skill.y + 5 }, 20 * scale_offset, 2, RAYWHITE);
+		DrawTextEx(GetFontDefault(), "+", { inv_skill_luck.x + 10, inv_skill_luck.y + 5 }, 20 * scale_offset, 2, RAYWHITE);
+
+		if (CheckCollisionPointRec(GetMousePosition(), inv_skill_luck)) {
+
+			DrawRectangleRounded(inv_skill_luck, 0.5, 4, LIGHTGRAY);
+			DrawTextEx(GetFontDefault(), "+", { inv_skill_luck.x + 10, inv_skill_luck.y + 5 }, 20, 2, RAYWHITE);
+			if (IsMouseButtonPressed(0)) {
+				if (player.skill_points > 0) {
+					player.luck++;
+					player.skill_points--;
+				}
+			}
+		}
+		if (CheckCollisionPointRec(GetMousePosition(), inv_skill_skill)) {
+			DrawRectangleRounded(inv_skill_skill, 0.5, 4, LIGHTGRAY);
+			DrawTextEx(GetFontDefault(), "+", { inv_skill_skill.x + 10, inv_skill_skill.y + 5 }, 20, 2, RAYWHITE);
+			if (IsMouseButtonPressed(0)) {
+				if (player.skill_points > 0) {
+					player.skill++;
+					player.skill_points--;
+				}
+			}
+		}
 
 		break;
 	}
 
 		EndMode2D();
 		EndDrawing();
-
 }
+
 
 	void App::unloadTex() {
 		textures.unloadTextures();
