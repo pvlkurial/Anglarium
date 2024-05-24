@@ -22,6 +22,7 @@ public:
 	int level;
 	CFishingRod rod;
 	long gold;
+	int silver;
 	int qtime;
 	int skill_points;
 
@@ -42,4 +43,5 @@ public:
 	void sellFish(Fish & fish);
 	int getGold(Fish & fish);
 	void displayQ();
+	int getSilver(Fish& fish);
 };

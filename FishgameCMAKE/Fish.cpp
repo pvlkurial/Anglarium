@@ -7,7 +7,7 @@
 #include <vector>
     
     int Fish::getRarity(int rodLuck, int playerLuck, int playerSkill) const {
-        float temp = GetRandomValue(0, 50000/(rodLuck * playerLuck * playerSkill * 1.000));
+        float temp = GetRandomValue(0, 50000/(rodLuck * ((playerLuck + playerSkill) * 0.2) * 1.000));
         if (temp < 20000) {
             if (temp < 5000) {
                 if (temp < 2500) {
@@ -30,7 +30,7 @@
     }
 
     Fish::Fish(int rodLuck, int playerLuck, int playerSkill, int playerLevel, int rodStrength, CTextureManager & texman)  {
-        weight = (GetRandomValue(500, 5000) / 1000 * rodStrength * (playerLevel / 5.000) + 1.373*playerSkill*playerLuck) / 10.000;
+        weight = (GetRandomValue(500, 5000) / 1000 * rodStrength * (playerLevel / 5.000) + 0.673*playerSkill*playerLuck) / 10.000;
         rarity = getRarity(rodLuck, playerLuck, playerSkill);
         selected = false;
         switch (GetRandomValue(0, 5)) {

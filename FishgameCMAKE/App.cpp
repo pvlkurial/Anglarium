@@ -61,7 +61,8 @@ void fish_in_shop_inventory(CCharacter & player, int pos, float scale_offset){
 		Rectangle rec = { (float)GetScreenWidth() / 6 * (pos + 1) - 20, (float)GetScreenHeight() / 3 * 2 , player.fishInventory[0].m_tex.width * scale_offset, (float)GetScreenHeight() / 3 };
 		DrawRectangleRec(rec, { 0,0,0,100 });
 		std::string temp;
-		temp.append("Sell ").append(player.fishInventory[pos].m_name).append(" for ").append(toString(player.getGold(player.fishInventory[pos]))).append(" gold?");
+		temp.append("Sell ").append(player.fishInventory[pos].m_name).append(" for ").append(toString(player.getGold(player.fishInventory[pos]))).append(" gold and ")
+			.append(toString(player.getSilver(player.fishInventory[pos]))).append(" silver?");
 		DrawTextBoxed(GetFontDefault(), temp.c_str(), rec, 25, 2, true, WHITE);
 		Rectangle confirmRec{ (float)GetScreenWidth() / 6 * (pos + 1) - 20, (float)GetScreenHeight() / 12 * 11 , player.fishInventory[pos].m_tex.width * scale_offset, (float)GetScreenHeight() / 10 };
 		DrawRectangleRec(confirmRec, { 0,0,0, 150 });
@@ -77,6 +78,21 @@ void fish_in_shop_inventory(CCharacter & player, int pos, float scale_offset){
 		}
 
 	}
+}
+
+void fish_in_inventory(CCharacter& player, int pos, float scale_offset) {
+	DrawTextureEx(player.fishInventory[pos].m_tex, { (float)GetScreenWidth() / 6 * (pos + 1) - 20, (float)GetScreenHeight() / 3 * 2 + (20 * scale_offset) }, 0, 1 * scale_offset, WHITE);
+	Rectangle fish1rec = { (float)GetScreenWidth() / 6 * (pos + 1) - 20, (float)GetScreenHeight() / 3 * 2 , player.fishInventory[0].m_tex.width * scale_offset, (float)GetScreenHeight() / 3 };
+		if (CheckCollisionPointRec(GetMousePosition(), fish1rec)) {
+			std::string temp;
+			temp.append(toString(player.fishInventory[pos].m_name)).append("\n").append(toString(player.fishInventory[pos].weight)).append("\n")
+				.append(getRarityText(player.fishInventory[pos].rarity));
+			DrawTextBoxed(GetFontDefault(), temp.c_str(), fish1rec, 30 * scale_offset, 1, true, BLACK);
+			DrawRectangleRec(fish1rec, { 0,0,0,100 });
+			if (IsMouseButtonPressed(0)) {
+				player.fishInventory[pos].selected = !player.fishInventory[pos].selected;
+			}
+		}
 }
 
 
@@ -163,6 +179,12 @@ void App::OnRender() {
 	Vector2 trgt;
 	float scale_offset = sqrt((GetScreenHeight() * GetScreenHeight()) / (540 * 540));
 
+	if (player.silver >= 100)
+	{
+		player.gold += player.silver / 100;
+		player.silver = player.silver % 100;
+	}
+
 	switch (currentScreen) {
 
 	case TITLE:
@@ -229,102 +251,30 @@ void App::OnRender() {
 		screenCornerY = player.m_posY - GetScreenHeight() / 2 / camera.zoom + 10;
 		fishSpot.drawObjects(textures);
 		player.displayQ();
+		player.kbListen(fishSpot, textures.getTexture("popup_bg"), shops, soundsMan, camera, textures);
 
-		switch (currentMenu) {
-		case NONE:
-			if (IsKeyPressed(KEY_E) && !player.checkShopCollision(shops)) {
-				currentScreen = INV;
-			}
-			player.kbListen(fishSpot, textures.getTexture("popup_bg"), shops, soundsMan, camera, textures);
-			camera.zoom += ((float)GetMouseWheelMove() * 0.05f);
-			if (camera.zoom > 4.5f) camera.zoom = 4.5f;
-			if (camera.zoom < 0.2f) camera.zoom = 0.2f;
-			break;
-
-		case INVENTORY:
-			if (IsKeyPressed(KEY_E)) {
-				currentMenu = NONE;
-			}
-			DrawText("INVENTORY", screenCornerX + 1, screenCornerY + 1, 50 / camera.zoom, BLACK);
-			DrawText("INVENTORY", screenCornerX, screenCornerY, 50 / camera.zoom, RAYWHITE);
-
-			DrawText("SKILL POINTS", screenCornerX + GetScreenWidth() / camera.zoom - 100, screenCornerY, 50 / camera.zoom, RAYWHITE);
-			DrawText(toString(player.skill_points).c_str(), screenCornerX + GetScreenWidth() / camera.zoom - 50, screenCornerY + 20, 50 / camera.zoom, BLACK);
-
-			inv_skill_skill = { screenCornerX + GetScreenWidth() / camera.zoom - 100 / camera.zoom, (float)screenCornerY + 100 / camera.zoom, 100 / camera.zoom, 50 / camera.zoom };
-			inv_skill_luck = { screenCornerX + GetScreenWidth() / camera.zoom - 100 / camera.zoom, (float)screenCornerY + 150 / camera.zoom, 100 / camera.zoom, 50 / camera.zoom };
-			DrawRectangleRounded(inv_skill_skill, 0.5, 4, DARKGRAY);
-			DrawRectangleRounded(inv_skill_luck, 0.5, 4, DARKGRAY);
-			DrawTextEx(GetFontDefault(), "+", { inv_skill_skill.x + 10, inv_skill_skill.y + 5 }, 10 * scale_offset, 2, RAYWHITE);
-			DrawTextEx(GetFontDefault(), "+", { inv_skill_luck.x + 10, inv_skill_luck.y + 5 }, 10 * scale_offset, 2, RAYWHITE);
-
-			if (CheckCollisionPointRec({ GetMousePosition().x / 2 - GetMousePosition().x + player.m_posX,
-				(GetMousePosition().y / 2 - GetMousePosition().y + player.m_posY) / camera.zoom }, inv_skill_luck)) {
-
-				DrawRectangleRounded(inv_skill_luck, 0.5, 4, DARKGRAY);
-				DrawTextEx(GetFontDefault(), "+", { inv_skill_luck.x + 10, inv_skill_luck.y + 5 }, 10 * scale_offset, 2, RAYWHITE);
-				if (IsMouseButtonPressed(0)) {
-					if (player.skill_points > 0) {
-						player.luck++;
-						player.skill_points--;
-					}
-				}
-			}
-			if (CheckCollisionPointRec(GetMousePosition(), inv_skill_skill)) {
-				DrawRectangleRounded(inv_skill_skill, 0.5, 4, DARKGRAY);
-				DrawTextEx(GetFontDefault(), "+", { inv_skill_skill.x + 10, inv_skill_skill.y + 5 }, 10 * scale_offset, 2, RAYWHITE);
-				if (IsMouseButtonPressed(0)) {
-					if (player.skill_points > 0) {
-						player.skill++;
-						player.skill_points--;
-					}
-				}
-			}
-
-			inventoryPage = 1;
-			for (size_t i = 0; i < player.fishInventory.size(); i++) {
-				DrawTexture(textures.getTexture("cod"), screenCornerX + 100, screenCornerY + 100 + i * 128, WHITE);
-			}
-			if ((mouseX > 0) && (128 > mouseX) &&
-				(mouseY > 0) && (mouseY < 128) && player.fishInventory.size() > 0) {
-				// check which box is mouse in
-				DrawTexture(textures.getTexture("cod"), screenCornerX, screenCornerY, WHITE);
-				DrawText(toString<double>(player.fishInventory[0].weight).c_str(), screenCornerX, screenCornerY, 50, RAYWHITE);
-			}
-			if ((mouseX > 0) && (128 > mouseX) &&
-				(mouseY > 128) && (mouseY < 128 * 2) && player.fishInventory.size() > 1) {
-				// check which box is mouse in
-				DrawText(toString<double>(player.fishInventory[1].weight).c_str(), screenCornerX, screenCornerY, 50, RAYWHITE);
-			}
-			if ((mouseX > 0) && (128 > mouseX) &&
-				(mouseY > 128 * 2) && (mouseY < 128 * 3) && player.fishInventory.size() > 2) {
-				// check which box is mouse in
-				DrawText(toString<double>(player.fishInventory[2].weight).c_str(), screenCornerX, screenCornerY, 50, RAYWHITE);
-			}
-			if ((mouseX > 0) && (128 > mouseX) &&
-				(mouseY > 128 * 3) && (mouseY < 128 * 4) && player.fishInventory.size() > 3) {
-				// check which box is mouse in
-				DrawText(toString<double>(player.fishInventory[3].weight).c_str(), screenCornerX, screenCornerY, 50, RAYWHITE);
-			}
-			if ((mouseX > 0) && (128 > mouseX) &&
-				(mouseY > 128 * 4) && (mouseY < 128 * 5) && player.fishInventory.size() > 4) {
-				// check which box is mouse in
-				DrawText(toString<double>(player.fishInventory[4].weight).c_str(), screenCornerX, screenCornerY, 50, RAYWHITE);
-			}
-			break;
+		if (IsKeyPressed(KEY_E) && !player.checkShopCollision(shops)) {
+			currentScreen = INV;
 		}
-		break;
+		camera.zoom += ((float)GetMouseWheelMove() * 0.05f);
+		if (camera.zoom > 4.5f) camera.zoom = 4.5f;
+		if (camera.zoom < 0.2f) camera.zoom = 0.2f;
+
+
+	break;
 	case SHOP:
 		if (IsKeyPressed(KEY_E)) {
 			currentScreen = GAMEPLAY;
 			player.popupQ.erase(player.popupQ.begin(), player.popupQ.end());
 		}
-		DrawText("FISH SHOP", 0 + 1, 0 + 1, 100, BLACK);
-		DrawText("FISH SHOP", 0 + 1, 0 + 1, 100, RAYWHITE);
+		DrawText("FISH SHOP", 0 + 1, 0 + 1, 75, BLACK);
+		DrawText("FISH SHOP", 0 + 1, 0 + 1, 75, RAYWHITE);
 		//DrawRectangle(0, 0 + GetScreenHeight()  / 3 * 2, GetScreenWidth(), GetScreenHeight() / 2, RAYWHITE);
 		DrawRectangleGradientV(0, 0 + GetScreenHeight() / 3 * 2, GetScreenWidth(), GetScreenHeight() / 2, RAYWHITE, DARKGRAY);
 		DrawTextureEx(textures.getTexture("coin"), { 0, (float)GetScreenHeight() / 3 * 2 }, 0, 2.2 * scale_offset, WHITE);
+		DrawTextureEx(textures.getTexture("coin"), { 0, (float)GetScreenHeight() / 3 * 2 + 50}, 0, 2.2 * scale_offset, GRAY);
 		DrawText(toString(player.gold).c_str(), 0 + (64 * scale_offset), 0 + GetScreenHeight() / 3 * 2 + (12 * scale_offset), 45 * scale_offset, BLACK);
+		DrawText(toString(player.silver).c_str(), 0 + (64 * scale_offset), 0 + GetScreenHeight() / 3 * 2 + (12 * scale_offset) + 50, 45 * scale_offset, BLACK);
 		switch (currentShopMenu) {
 		case NO:
 			shop_inv_rec = { (float)GetScreenWidth() / 4, (float)GetScreenHeight() / 3 * 2 + 8, (float)GetScreenWidth() / 5, (float)GetScreenHeight() / 10 };
@@ -384,26 +334,53 @@ void App::OnRender() {
 				currentShopMenu = NO;
 			}
 			break;
-		default:
-			break;
+		
 
 		}
-
+	break;
 	case INV:
 
 		if (IsKeyPressed(KEY_E)) {
 			currentScreen = GAMEPLAY;
+			currentMenu = NONE;
 		}
 		DrawText("INVENTORY", 1, 1, 50, BLACK);
 		DrawText("INVENTORY", 0, 0, 50, RAYWHITE);
 
+
 		DrawText("SKILL POINTS", GetScreenWidth() / 8 * 4, 0, 50 * scale_offset, RAYWHITE);
 		DrawText(toString(player.skill_points).c_str(), GetScreenWidth() / 8 * 7 + 50, 0, 50*scale_offset, WHITE);
+
+		DrawRectangleGradientV(0, 0 + GetScreenHeight() / 3 * 2, GetScreenWidth(), GetScreenHeight() / 2, RAYWHITE, DARKGRAY);
+
+		if (!player.fishInventory.empty()) {
+			fish_in_inventory(player, 0, scale_offset);
+
+			if (player.fishInventory.size() > 1) {
+				fish_in_inventory(player, 1, scale_offset);
+
+				if (player.fishInventory.size() > 2) {
+					fish_in_inventory(player, 2, scale_offset);
+
+					if (player.fishInventory.size() > 3) {
+						fish_in_inventory(player, 3, scale_offset);
+
+						if (player.fishInventory.size() > 4) {
+							fish_in_inventory(player, 4, scale_offset);
+
+						}
+					}
+				}
+
+			}
+		}
 
 		inv_skill_skill = { (float)GetScreenWidth() - 100 , 100 , 100 , 50 };
 		inv_skill_luck = { (float)GetScreenWidth() - 100 ,  150 , 100 , 50 };
 		DrawRectangleRounded(inv_skill_skill, 0.5, 4, DARKGRAY);
 		DrawRectangleRounded(inv_skill_luck, 0.5, 4, DARKGRAY);
+		DrawText("Skill", inv_skill_skill.x - 75, inv_skill_skill.y+25, 25 * scale_offset, RAYWHITE);
+		DrawText("Luck", inv_skill_luck.x - 75, inv_skill_luck.y+25, 25 * scale_offset, RAYWHITE);
 		DrawTextEx(GetFontDefault(), "+", { inv_skill_skill.x + 10, inv_skill_skill.y + 5 }, 20 * scale_offset, 2, RAYWHITE);
 		DrawTextEx(GetFontDefault(), "+", { inv_skill_luck.x + 10, inv_skill_luck.y + 5 }, 20 * scale_offset, 2, RAYWHITE);
 
