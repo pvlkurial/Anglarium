@@ -119,8 +119,11 @@ void App::Init() {
 	textures.addTexture("pufferfish", "C:/Users/pavel/source/repos/FishgameCMAKE/FishgameCMAKE/resources/textures/fish2.png");
 	textures.addTexture("bluefish", "C:/Users/pavel/source/repos/FishgameCMAKE/FishgameCMAKE/resources/textures/fish3.png");
 	textures.addTexture("clownfish", "C:/Users/pavel/source/repos/FishgameCMAKE/FishgameCMAKE/resources/textures/clownfish.png");
-	textures.addTexture("water32", "C:/Users/pavel/source/repos/FishgameCMAKE/FishgameCMAKE/resources/textures/water32.png");
+	textures.addTexture("water", "C:/Users/pavel/source/repos/FishgameCMAKE/FishgameCMAKE/resources/textures/water32.png");
 	textures.addTexture("fishhut", "C:/Users/pavel/source/repos/FishgameCMAKE/FishgameCMAKE/resources/textures/fishhut.png");
+	textures.addTexture("shop", "C:/Users/pavel/source/repos/FishgameCMAKE/FishgameCMAKE/resources/textures/shop.png");
+	textures.addTexture("path", "C:/Users/pavel/source/repos/FishgameCMAKE/FishgameCMAKE/resources/textures/path.png");
+	textures.addTexture("fishGameIcon", "C:/Users/pavel/source/repos/FishgameCMAKE/FishgameCMAKE/resources/textures/cod.png");
 
 	map = CMap(textures, "C:/Users/pavel/source/repos/FishgameCMAKE/FishgameCMAKE/resources/maps/map1.fshmap");
 
@@ -128,9 +131,10 @@ void App::Init() {
 
 	fishSpot.addFishingSpot(50, 50, 50, 50);
 	fishSpot.addFishingSpot(200, 200, 50, 50);
-	fishSpot.addFishingSpot(16 * 32, 27 * 32, 50, 50);
+	fishSpot.addFishingSpot(16 * 32, 16 * 32, 50, 50);
 
 	shops.addShopSpot(0, 100, 50, 50);
+	shops.addShopSpot(10 * 32, 10 * 32, 50, 50);
 
 	soundsMan.addSound("C:/Users/pavel/source/repos/FishgameCMAKE/FishgameCMAKE/resources/sounds/footsteps_grass.wav");
 }
@@ -140,9 +144,9 @@ void App::RunGame()
 {
 	
 	InitWindow(screenWidth, screenHeight, "Anglarium");
-	SetWindowIcon(LoadImageFromTexture(textures.getTexture("water32")));
+	SetWindowIcon(LoadImageFromTexture(textures.getTexture("fishGameIcon")));
 	SetTargetFPS(60);
-	SetExitKey(KEY_ESCAPE);
+	SetExitKey(NONE);
 	InitAudioDevice();
 	Vector2 trgt = { player.m_posX + 10.0f, player.m_posY + 10.0f };
 	camera.target = trgt;
@@ -208,7 +212,7 @@ void App::OnRender() {
 
 		break;
 	case PAUSE:
-		if (IsKeyPressed(KEY_ENTER)) {
+		if (IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_ESCAPE)) {
 			currentScreen = GAMEPLAY;
 		}
 		DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), RAYWHITE);
@@ -232,7 +236,7 @@ void App::OnRender() {
 
 	case GAMEPLAY:
 
-		if (IsKeyPressed(KEY_Q)) {
+		if (IsKeyPressed(KEY_Q) || IsKeyPressed(KEY_ESCAPE)) {
 			currentScreen = PAUSE;
 		}
 		if (IsKeyPressed(KEY_E) && player.checkShopCollision(shops)) {
@@ -250,6 +254,7 @@ void App::OnRender() {
 		screenCornerX = player.m_posX - GetScreenWidth() / 2 / camera.zoom + 10;
 		screenCornerY = player.m_posY - GetScreenHeight() / 2 / camera.zoom + 10;
 		fishSpot.drawObjects(textures);
+		shops.drawShopObjects(textures);
 		player.displayQ();
 		player.kbListen(fishSpot, textures.getTexture("popup_bg"), shops, soundsMan, camera, textures);
 
@@ -347,11 +352,22 @@ void App::OnRender() {
 		DrawText("INVENTORY", 1, 1, 50, BLACK);
 		DrawText("INVENTORY", 0, 0, 50, RAYWHITE);
 
+		DrawText("LEVEL", 1, 76, 30, BLACK);
+		DrawText("LEVEL", 0, 75, 30, RAYWHITE);
+
+		DrawText(toString(player.level).c_str(), 120, 70, 50, WHITE);
+
+
 
 		DrawText("SKILL POINTS", GetScreenWidth() / 8 * 4, 0, 50 * scale_offset, RAYWHITE);
 		DrawText(toString(player.skill_points).c_str(), GetScreenWidth() / 8 * 7 + 50, 0, 50*scale_offset, WHITE);
 
 		DrawRectangleGradientV(0, 0 + GetScreenHeight() / 3 * 2, GetScreenWidth(), GetScreenHeight() / 2, RAYWHITE, DARKGRAY);
+
+		DrawTextureEx(textures.getTexture("coin"), { 0, (float)GetScreenHeight() / 3 * 2 }, 0, 2.2 * scale_offset, WHITE);
+		DrawTextureEx(textures.getTexture("coin"), { 0, (float)GetScreenHeight() / 3 * 2 + 50 }, 0, 2.2 * scale_offset, GRAY);
+		DrawText(toString(player.gold).c_str(), 0 + (64 * scale_offset), 0 + GetScreenHeight() / 3 * 2 + (12 * scale_offset), 45 * scale_offset, BLACK);
+		DrawText(toString(player.silver).c_str(), 0 + (64 * scale_offset), 0 + GetScreenHeight() / 3 * 2 + (12 * scale_offset) + 50, 45 * scale_offset, BLACK);
 
 		if (!player.fishInventory.empty()) {
 			fish_in_inventory(player, 0, scale_offset);

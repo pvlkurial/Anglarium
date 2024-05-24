@@ -23,6 +23,7 @@ void CFishingSpot::drawObjects(CTextureManager& texman) const {
     for (const auto& item : fishingSpots) {
         DrawTextureEx(texman.getTexture("fishhut"), { item.x-20, item.y-20 }, 0, 2.5, WHITE);
     }
+
 }
 
 CFishingSpot::CFishingSpot() : m_width(0), m_height(0) {}
@@ -41,5 +42,11 @@ void CShop::addShopSpot(int posX, int posY, int width, int height) {
 void CShop::drawShopSpots() const {
     for (const auto& item : shopSpots) {
         DrawRectangleLines(item.x, item.y, item.width, item.height, RAYWHITE);
+
+    }
+}
+void CShop::drawShopObjects(CTextureManager& texman) const {
+    for (const auto item : shopSpots) {
+        DrawTextureEx(texman.getTexture("shop"), { item.x - 20, item.y - 20 }, 0, 2.5, WHITE);
     }
 }

@@ -40,6 +40,7 @@ public:
 	bool checkCollision(CFishingSpot& fishSpot, Texture2D& pop_tex) const;
 	bool checkShopCollision(CShop& shops) const;
 	void update();
+	bool isWithinBounds(int m_posX, int m_posY);
 	void sellFish(Fish & fish);
 	int getGold(Fish & fish);
 	void displayQ();

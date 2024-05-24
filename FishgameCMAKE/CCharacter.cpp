@@ -16,11 +16,18 @@ std::string toString(const T& src) {
     return is.str();
 }
 
-CCharacter::CCharacter(int posX, int posY) : m_posX(posX), m_posY(posY), skill(1), luck(1), level(1), xp(0), qtime(0) {
+bool CCharacter::isWithinBounds(int m_posX, int m_posY){
+    if (m_posX < 0 || m_posX > 800 || m_posY < 0 || m_posY > 800) {
+        return false;
+    }
+    return true;
+}
+
+CCharacter::CCharacter(int posX, int posY) : m_posX(posX), m_posY(posY), skill(1), luck(1), level(1), xp(0), qtime(0), gold(0), silver(0) {
 	m_colRec = { static_cast<float>(m_posX), static_cast<float>(m_posY), 20, 20 };
 }
 
-CCharacter::CCharacter(): m_posX(GetScreenWidth() / 2), m_posY(GetScreenHeight() / 2), skill(1), luck(1), level(1), xp(0), qtime(0) {}
+CCharacter::CCharacter(): m_posX(GetScreenWidth() / 2), m_posY(GetScreenHeight() / 2), skill(1), luck(1), level(1), xp(0), qtime(0), gold(0), silver(0) {}
 
 void CCharacter::charUpdate() {
 	m_colRec = { static_cast<float>(m_posX), static_cast<float>(m_posY), 20, 20 };
@@ -32,6 +39,9 @@ void CCharacter::fish(CFishingSpot& fishSpot, Texture2D& pop_tex, CTextureManage
     if (checkCollision(fishSpot, pop_tex)) {
         if (fishInventory.size() > 4) {
             std::cout << "Inventory Full" << std::endl;
+            if (popupQ.size() < 7) {
+                popupQ.push_back("Full Inventory!");
+            }
             return;
         }
         Fish fish(rod.luck, luck, skill, level, rod.strenght, texman);
@@ -40,8 +50,10 @@ void CCharacter::fish(CFishingSpot& fishSpot, Texture2D& pop_tex, CTextureManage
         xp += 1.246 * level * ((fish.rarity ^ 2) * 0.267) * fish.weight * 100;
         std::cout << "Caught a fish" << std::endl;
         std::string temp;
-        temp.append("+").append(toString(xp));
-        popupQ.push_back(temp);
+        temp.append("+").append(toString((int)(1.246 * level * ((fish.rarity ^ 2) * 0.267) * fish.weight * 100))).append("xp");
+        if (popupQ.size() < 7) {
+            popupQ.push_back(temp);
+        }
         update();
         return;
     }
@@ -50,41 +62,52 @@ void CCharacter::fish(CFishingSpot& fishSpot, Texture2D& pop_tex, CTextureManage
 }
 
 void CCharacter::kbListen(CFishingSpot& fishSpot, Texture2D& pop_tex, CShop & shops , CSoundManager& soundMan, Camera2D & camera, CTextureManager & texman) {
-
     if (IsKeyDown(KEY_UP)) {
-        if (IsKeyDown(KEY_LEFT_SHIFT)) {
+        if (isWithinBounds(m_posX, m_posY-1)) {
+
+            if (IsKeyDown(KEY_LEFT_SHIFT)) {
             m_posY--;
-        }
-        m_posY--;
-        if (!IsSoundPlaying(soundMan.getSound(0))) {
-            PlaySound(soundMan.getSound(0));
+            }
+            m_posY--;
+            if (!IsSoundPlaying(soundMan.getSound(0))) {
+                PlaySound(soundMan.getSound(0));
+            }
         }
     }
     if (IsKeyDown(KEY_DOWN)) {
-        if (IsKeyDown(KEY_LEFT_SHIFT)) {
+        if (isWithinBounds(m_posX, m_posY+1)) {
+
+            if (IsKeyDown(KEY_LEFT_SHIFT)) {
+                m_posY++;
+            }
             m_posY++;
-        }
-        m_posY++;
-        if (!IsSoundPlaying(soundMan.getSound(0))) {
-            PlaySound(soundMan.getSound(0));
+            if (!IsSoundPlaying(soundMan.getSound(0))) {
+                PlaySound(soundMan.getSound(0));
+            }
         }
     }
     if (IsKeyDown(KEY_LEFT)) {
-        if (IsKeyDown(KEY_LEFT_SHIFT)) {
+        if (isWithinBounds(m_posX-1, m_posY)) {
+
+            if (IsKeyDown(KEY_LEFT_SHIFT)) {
+                m_posX--;
+            }
             m_posX--;
-        }
-        m_posX--;
-        if (!IsSoundPlaying(soundMan.getSound(0))) {
-            PlaySound(soundMan.getSound(0));
+            if (!IsSoundPlaying(soundMan.getSound(0))) {
+                PlaySound(soundMan.getSound(0));
+            }
         }
     }
     if (IsKeyDown(KEY_RIGHT)) {
-        if (IsKeyDown(KEY_LEFT_SHIFT)) {
+        if (isWithinBounds(m_posX + 1, m_posY)) {
+
+            if (IsKeyDown(KEY_LEFT_SHIFT)) {
+                m_posX++;
+            }
             m_posX++;
-        }
-        m_posX++;
-        if (!IsSoundPlaying(soundMan.getSound(0))) {
-            PlaySound(soundMan.getSound(0));
+            if (!IsSoundPlaying(soundMan.getSound(0))) {
+                PlaySound(soundMan.getSound(0));
+            }
         }
     }
     if (!IsKeyDown(KEY_UP) && !IsKeyDown(KEY_DOWN) && !IsKeyDown(KEY_LEFT) && !IsKeyDown(KEY_RIGHT)) {
@@ -126,9 +149,8 @@ void CCharacter::kbListen(CFishingSpot& fishSpot, Texture2D& pop_tex, CShop & sh
 bool CCharacter::checkCollision(CFishingSpot& fishSpot, Texture2D& pop_tex) const {
     for (const auto& item : fishSpot.fishingSpots) {
         if (CheckCollisionRecs(m_colRec, item)) {
-            DrawRectangleLines(item.x, item.y, item.width, item.height, YELLOW); // DEBUG
-            CPopups popup(pop_tex);
-            popup.pop("TEST POPUP MESSAGE");
+            //DrawRectangleLines(item.x, item.y, item.width, item.height, YELLOW); // DEBUG
+           
             return true;
         }
     }
@@ -141,29 +163,32 @@ void CCharacter::loadTexture(const Texture2D& tex){
 }
 
 void CCharacter::update() {
-    if (xp > 150) {
+    if (xp < 151) {
+        level = 1;
+    }
+    if (xp > 150 && xp < 751) {
         if (level < 2) {
-            skill_points += 5;
+            skill_points += 3;
         }
         level = 2;
-        if (xp > 750) {
+        if (xp > 750 && xp < 3126) {
             if (level < 3) {
-                skill_points += 5;
+                skill_points += 3;
             }
             level = 3;
-            if(xp > 3125){
+            if(xp > 3125 && xp < 13259){
                 if (level < 4) {
-                    skill_points += 5;
+                    skill_points += 3;
                 }
                 level = 4;
-                if (xp > 13258) {
+                if (xp > 13258 && xp < 38906) {
                     if (level < 5) {
-                        skill_points += 7;
+                        skill_points += 3;
                     }
                     level = 5;
                     if (xp > 38905) {
                         if (level < 6) {
-                            skill_points += 7;
+                            skill_points += 3;
                         }
                         level = 6;
                     }

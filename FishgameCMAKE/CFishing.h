@@ -33,5 +33,6 @@ public:
     std::vector<Rectangle> shopSpots;
     void addShopSpot(int posX, int posY, int width, int height);
     void drawShopSpots() const;
+    void drawShopObjects(CTextureManager & texman) const;
 
 };
