@@ -355,7 +355,35 @@ void App::OnRender() {
 		DrawText("LEVEL", 1, 76, 30, BLACK);
 		DrawText("LEVEL", 0, 75, 30, RAYWHITE);
 
+		DrawText("XP", 1, 120, 30, BLACK);
+		DrawText("XP", 0, 120, 30, RAYWHITE);
+
 		DrawText(toString(player.level).c_str(), 120, 70, 50, WHITE);
+
+
+		switch (player.level) {
+		case 1:
+			DrawText(toString(player.xp).append(" / 150").c_str(), 50, 120, 30, WHITE);
+			break;
+		case 2:
+			DrawText(toString(player.xp).append(" / 751").c_str(), 50, 120, 30, WHITE);
+			break;
+		case 3:
+			DrawText(toString(player.xp).append(" / 3126").c_str(), 50, 120, 30, WHITE);
+			break;
+		case 4:
+			DrawText(toString(player.xp).append(" / 13259").c_str(), 50, 120, 30, WHITE);
+			break;
+		case 5:
+			DrawText(toString(player.xp).append(" / 38906").c_str(), 50, 120, 30, WHITE);
+			break;
+		case 6:
+			DrawText(toString(player.xp).append(" / INF").c_str(), 50, 120, 30, WHITE);
+			break;
+		default:
+			DrawText(toString(player.xp).append(" / INF").c_str(), 50, 120, 30, WHITE);
+			break;
+		}
 
 
 

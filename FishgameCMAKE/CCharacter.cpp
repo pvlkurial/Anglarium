@@ -166,43 +166,51 @@ void CCharacter::update() {
     if (xp < 151) {
         level = 1;
     }
-    if (xp > 150 && xp < 751) {
+    if (xp > 150 && xp < 750) {
         if (level < 2) {
             skill_points += 3;
+            popupQ.push_back("LEVEL UP!");
         }
         level = 2;
+    }
         if (xp > 750 && xp < 3126) {
             if (level < 3) {
+                popupQ.push_back("LEVEL UP!");
                 skill_points += 3;
             }
             level = 3;
-            if(xp > 3125 && xp < 13259){
-                if (level < 4) {
-                    skill_points += 3;
-                }
-                level = 4;
-                if (xp > 13258 && xp < 38906) {
-                    if (level < 5) {
-                        skill_points += 3;
-                    }
-                    level = 5;
-                    if (xp > 38905) {
-                        if (level < 6) {
-                            skill_points += 3;
-                        }
-                        level = 6;
-                    }
-                }
-            }
         }
-    }
+        if (xp > 3125 && xp < 13259) {
+            if (level < 4) {
+                popupQ.push_back("LEVEL UP!");
+                skill_points += 3;
+            }
+            level = 4;
+        }
+        if (xp > 13258 && xp < 38906) {
+            if (level < 5) {
+                popupQ.push_back("LEVEL UP!");
+                skill_points += 3;
+            }
+            level = 5;
+        }
+        if (xp > 38905) {
+            if (level < 6) {
+                popupQ.push_back("LEVEL UP!");
+                skill_points += 3;
+            }
+            level = 6;
+        }
     std::cout << "LEVEL: " << level << std::endl;
+    
 }
+
+
 
 bool CCharacter::checkShopCollision(CShop & shop) const {
     for (const auto& item : shop.shopSpots) {
         if (CheckCollisionRecs(m_colRec, item)) {
-            DrawRectangleLines(item.x, item.y, item.width, item.height, DARKBLUE); // DEBUG
+            //DrawRectangleLines(item.x, item.y, item.width, item.height, DARKBLUE); // DEBUG
             return true;
         }
     }
