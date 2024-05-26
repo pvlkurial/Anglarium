@@ -4,8 +4,8 @@
 #include <map>
 #include "CTextureManager.h"
 
-bool CTextureManager::addTexture(const std::string& key, const char* filePath) {
-	m_textures.insert({ key, LoadTexture(filePath) });
+bool CTextureManager::addTexture(const std::string& key, const std::string & filePath) {
+	m_textures.insert({ key, LoadTexture(filePath.c_str()) });
 	return 0;
 }
 

@@ -12,7 +12,7 @@ public:
 
     CTextureManager() = default;
 
-    bool addTexture(const std::string& key, const char* filePath);
+    bool addTexture(const std::string& key, const std::string& filePath);
     Texture2D& getTexture(const std::string& key) ;
 
     bool unloadTextures();

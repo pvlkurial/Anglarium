@@ -4,6 +4,7 @@
 #include "CFishing.h"
 #include "CTextureManager.h"
 #include <iostream>
+#include <filesystem>
 
 class App {
 	CMap map;
@@ -23,6 +24,10 @@ class App {
 
 	const float screenHeight = 1080 / 2;
 	const float screenWidth = 1920 / 2;
+
+	std::filesystem::path assetPath = "./resources/";
+
+	std::string appDir = GetApplicationDirectory();
 public:
 
 	App();

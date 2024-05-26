@@ -109,25 +109,25 @@ void App::Init() {
 	currentMenu = NONE;
 
 	currentShopMenu = NO;
+	appDir = GetApplicationDirectory();
+	std::cout << appDir;
 
+	textures.addTexture("cod", assetPath.string().append("textures/cod.png"));
+	textures.addTexture("sand32", assetPath.string().append("textures/sand32.png"));
+	textures.addTexture("grass32", assetPath.string().append("textures/grass32.png"));
+	textures.addTexture("coin", assetPath.string().append("textures/coin.png"));
+	textures.addTexture("pufferfish", assetPath.string().append("textures/fish2.png"));
+	textures.addTexture("bluefish", assetPath.string().append("textures/fish3.png"));
+	textures.addTexture("clownfish", assetPath.string().append("textures/clownfish.png"));
+	textures.addTexture("water", assetPath.string().append("textures/water32.png"));
+	textures.addTexture("fishhut", assetPath.string().append("textures/fishhut.png"));
+	textures.addTexture("shop", assetPath.string().append("textures/shop.png"));
+	textures.addTexture("path", assetPath.string().append("textures/path.png"));
+	textures.addTexture("fishGameIcon", assetPath.string().append("textures/cod.png"));
 
-	textures.addTexture("popup_bg", "C:/Users/pavel/source/repos/FishgameCMAKE/FishgameCMAKE/resources/textures/popup_bg.png");
-	textures.addTexture("cod", "C:/Users/pavel/source/repos/FishgameCMAKE/FishgameCMAKE/resources/textures/cod.png");
-	textures.addTexture("sand32", "C:/Users/pavel/source/repos/FishgameCMAKE/FishgameCMAKE/resources/textures/sand32.png");
-	textures.addTexture("grass32", "C:/Users/pavel/source/repos/FishgameCMAKE/FishgameCMAKE/resources/textures/grass32.png");
-	textures.addTexture("coin", "C:/Users/pavel/source/repos/FishgameCMAKE/FishgameCMAKE/resources/textures/coin.png");
-	textures.addTexture("pufferfish", "C:/Users/pavel/source/repos/FishgameCMAKE/FishgameCMAKE/resources/textures/fish2.png");
-	textures.addTexture("bluefish", "C:/Users/pavel/source/repos/FishgameCMAKE/FishgameCMAKE/resources/textures/fish3.png");
-	textures.addTexture("clownfish", "C:/Users/pavel/source/repos/FishgameCMAKE/FishgameCMAKE/resources/textures/clownfish.png");
-	textures.addTexture("water", "C:/Users/pavel/source/repos/FishgameCMAKE/FishgameCMAKE/resources/textures/water32.png");
-	textures.addTexture("fishhut", "C:/Users/pavel/source/repos/FishgameCMAKE/FishgameCMAKE/resources/textures/fishhut.png");
-	textures.addTexture("shop", "C:/Users/pavel/source/repos/FishgameCMAKE/FishgameCMAKE/resources/textures/shop.png");
-	textures.addTexture("path", "C:/Users/pavel/source/repos/FishgameCMAKE/FishgameCMAKE/resources/textures/path.png");
-	textures.addTexture("fishGameIcon", "C:/Users/pavel/source/repos/FishgameCMAKE/FishgameCMAKE/resources/textures/cod.png");
+	map = CMap(textures, assetPath.string().append("maps/map1.fshmap"));
 
-	map = CMap(textures, "C:/Users/pavel/source/repos/FishgameCMAKE/FishgameCMAKE/resources/maps/map1.fshmap");
-
-	player.loadTexture(textures.getTexture("char"));
+	//player.loadTexture(textures.getTexture("char"));
 
 	fishSpot.addFishingSpot(50, 50, 50, 50);
 	fishSpot.addFishingSpot(200, 200, 50, 50);
@@ -136,7 +136,8 @@ void App::Init() {
 	shops.addShopSpot(0, 100, 50, 50);
 	shops.addShopSpot(10 * 32, 10 * 32, 50, 50);
 
-	soundsMan.addSound("C:/Users/pavel/source/repos/FishgameCMAKE/FishgameCMAKE/resources/sounds/footsteps_grass.wav");
+	soundsMan.addSound(assetPath.string().append("sounds/footsteps_grass.wav").c_str());
+
 }
 
 
