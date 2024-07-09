@@ -3,6 +3,7 @@
 #include <iostream>
 #include "CTextureManager.h"
 
+
 CFishingSpot::CFishingSpot(const size_t w, const size_t h) : m_width(w), m_height(h) {}
 
 

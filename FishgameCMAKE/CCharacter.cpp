@@ -165,44 +165,89 @@ void CCharacter::loadTexture(const Texture2D& tex){
 void CCharacter::update() {
     if (xp < 151) {
         level = 1;
+        skill_points = 0;
     }
     if (xp > 150 && xp < 750) {
         if (level < 2) {
             skill_points += 3;
             popupQ.push_back("LEVEL UP!");
+            loreValue = 3;
+            level = 2;
         }
-        level = 2;
+            level = 2;
     }
         if (xp > 750 && xp < 3126) {
             if (level < 3) {
                 popupQ.push_back("LEVEL UP!");
                 skill_points += 3;
+                level = 3;
             }
             level = 3;
+
         }
         if (xp > 3125 && xp < 13259) {
             if (level < 4) {
                 popupQ.push_back("LEVEL UP!");
                 skill_points += 3;
+                level = 4;
             }
             level = 4;
+
         }
         if (xp > 13258 && xp < 38906) {
             if (level < 5) {
                 popupQ.push_back("LEVEL UP!");
                 skill_points += 3;
+                level = 5;
             }
             level = 5;
+
         }
         if (xp > 38905) {
             if (level < 6) {
                 popupQ.push_back("LEVEL UP!");
                 skill_points += 3;
+                level = 6;
+
             }
             level = 6;
+
         }
     std::cout << "LEVEL: " << level << std::endl;
     
+    switch (loreValue) {
+    case 0:
+    case 1:
+        shopTalkQ.push_back("Hey!");
+        shopTalkQ.push_back("You must be new here!");
+        shopTalkQ.push_back("Glad to see another fisherman in this town");
+        shopTalkQ.push_back("Stop by my shop sometime!");
+        loreValue = 2;
+        break;
+    case 3:
+        shopTalkQ.push_back("Wow you got better in such a short time...");
+        shopTalkQ.push_back("Care to look at my stuff?");
+        shopTalkQ.push_back("I might have some stuff you'd like...");
+        shopTalkQ.push_back("Sorry for the advertising, market hasn't really been booming lately...");
+        shopTalkQ.push_back("I fear that i will have to close the shop if people aren't coming.");
+        shopTalkQ.push_back("... anyway, i've got some brand new rods, feel free to look around!");
+
+
+        loreValue = 4;
+        break;
+    case 5:
+
+        loreValue = 6;
+        break;
+    case 7:
+        loreValue = 8;
+        break;
+    default:
+
+    break;
+    }
+
+
 }
 
 

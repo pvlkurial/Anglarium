@@ -1,0 +1,31 @@
+{
+  "rods":[
+
+    {
+      "name": "Wooden Rod",
+      "luck": 4,
+      "skill": 3,
+      "level_needed": 1,
+      "price": 25,
+      "texture": wooden_rod
+    },
+
+    {
+      "name": "Stone Rod",
+      "luck": 2,
+      "skill": 4,
+      "level_needed": 1,
+      "price": 34,
+      "texture": "stone_rod"
+    },
+
+    {
+      "name": "Bone Rod",
+      "luck": 3,
+      "skill": 4,
+      "level_needed": 2,
+      "price": 50,
+      "texture": "bone_rod"
+    }
+  ]
+}

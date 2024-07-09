@@ -5,6 +5,8 @@
 #include "CCharacter.h"
 #include "CFishing.h"
 #include <sstream>
+#include <fstream>
+#include <nlohmann/json.hpp>
 
 static void DrawTextBoxed(Font font, const char* text, Rectangle rec, float fontSize, float spacing, bool wordWrap, Color tint);   // Draw text using font inside rectangle limits
 static void DrawTextBoxedSelectable(Font font, const char* text, Rectangle rec, float fontSize, float spacing, bool wordWrap, Color tint, int selectStart, int selectLength, Color selectTint, Color selectBackTint);    // Draw text using font inside rectangle limits with support for text selection
@@ -95,6 +97,50 @@ void fish_in_inventory(CCharacter& player, int pos, float scale_offset) {
 		}
 }
 
+void fishrod_in_shop_inventory(CCharacter& player, int pos, float scale_offset, CShop & shop, CTextureManager & textures) {
+
+	DrawTextureEx(shop.shopRods[0].m_tex, {(float)GetScreenWidth() / 6 * (pos + 1) - 20, (float)GetScreenHeight() / 3 * 2 + (20 * scale_offset)}, 0, scale_offset, WHITE);
+	Rectangle fish1rec = { (float)GetScreenWidth() / 6 * (pos + 1) - 20, (float)GetScreenHeight() / 3 * 2 , shop.shopRods[0].m_tex.width * 3 * scale_offset, (float)GetScreenHeight() / 3 };
+	if (!shop.shopRods[pos].selected) {
+		if (CheckCollisionPointRec(GetMousePosition(), fish1rec)) {
+			std::string temp;
+			temp.append(toString(shop.shopRods[pos].name)).append("\n").append(toString(shop.shopRods[pos].level_needed)).append("\n")
+				.append(toString(shop.shopRods[pos].price));
+			DrawTextBoxed(GetFontDefault(), temp.c_str(), fish1rec, 30 * scale_offset, 1, true, BLACK);
+			DrawRectangleRec(fish1rec, { 0,0,0,100 });
+			if (IsMouseButtonPressed(0)) {
+				shop.shopRods[pos].selected = !shop.shopRods[pos].selected;
+			}
+		}
+	}
+	else {
+		Rectangle rec = { (float)GetScreenWidth() / 6 * (pos + 1) - 20, (float)GetScreenHeight() / 3 * 2 , shop.shopRods[pos].m_tex.width * 3 * scale_offset, (float)GetScreenHeight() / 3 };
+		DrawRectangleRec(rec, { 0,0,0,100 });
+		std::string temp;
+		temp.append("Buy ").append(shop.shopRods[pos].name).append(" for ").append(toString(shop.shopRods[pos].price)).append(" gold?");
+		DrawTextBoxed(GetFontDefault(), temp.c_str(), rec, 25, 2, true, WHITE);
+		Rectangle confirmRec{ (float)GetScreenWidth() / 6 * (pos + 1) - 20, (float)GetScreenHeight() / 12 * 11 , shop.shopRods[pos].m_tex.width * 3 * scale_offset, (float)GetScreenHeight() / 10 };
+		DrawRectangleRec(confirmRec, { 0,0,0, 150 });
+		DrawTextEx(GetFontDefault(), "CONFIRM", { (float)GetScreenWidth() / 6 * (pos + 1) - 20 + 5, (float)GetScreenHeight() / 12 * 11 + 5 }, 25, 2, RAYWHITE);
+		if (CheckCollisionPointRec(GetMousePosition(), confirmRec) && IsMouseButtonPressed(0)) {
+			if (player.gold >= shop.shopRods[pos].price) {
+				player.gold += -shop.shopRods[pos].price;
+				std::cout << shop.shopRods[pos].name << std::endl;
+				player.ownedRods.push_back(shop.shopRods[pos]);
+				auto it = std::lower_bound(shop.shopRods.begin(), shop.shopRods.end(), shop.shopRods[pos]);
+				if (it != shop.shopRods.end()) {
+					shop.shopRods.erase(it);
+				}
+			}
+		}
+		if (IsMouseButtonPressed(0) && !CheckCollisionPointRec(GetMousePosition(), confirmRec)) {
+			if (shop.shopRods.size() > pos) {
+				shop.shopRods[pos].selected = !shop.shopRods[pos].selected;
+			}
+		}
+
+	}
+}
 
 
 
@@ -124,6 +170,12 @@ void App::Init() {
 	textures.addTexture("shop", assetPath.string().append("textures/shop.png"));
 	textures.addTexture("path", assetPath.string().append("textures/path.png"));
 	textures.addTexture("fishGameIcon", assetPath.string().append("textures/cod.png"));
+	textures.addTexture("shopkeeper", assetPath.string().append("textures/shopkeeper.png"));
+	textures.addTexture("basic_rod", assetPath.string().append("textures/basic_rod.png"));
+	textures.addTexture("wooden_rod", assetPath.string().append("textures/wooden_rod.png"));
+	textures.addTexture("stone_rod", assetPath.string().append("textures/stone_rod.png"));
+	textures.addTexture("bone_rod", assetPath.string().append("textures/bone_rod.png"));
+	textures.addTexture("shop_bg", assetPath.string().append("textures/shop_bg.png"));
 
 	map = CMap(textures, assetPath.string().append("maps/map1.fshmap"));
 
@@ -137,6 +189,27 @@ void App::Init() {
 	shops.addShopSpot(10 * 32, 10 * 32, 50, 50);
 
 	soundsMan.addSound(assetPath.string().append("sounds/footsteps_grass.wav").c_str());
+
+	std::ifstream f(assetPath.string().append("lib/fishrods.json"));
+	if (f.is_open()) {
+		nlohmann::json data = nlohmann::json::parse(f);
+		std::cout << data["rods"][0] << std::endl;
+
+		for (const auto& it : data["rods"]) {
+			std::stringstream is;
+			is << it["texture"];
+			std::string temp = is.str();
+			temp.erase(0,1);
+			temp.erase(temp.size()-1,1);
+
+			std::cout << temp << std::endl;
+			player.fishingRods.push_back(CFishingRod(it["name"], it["luck"], it["skill"], it["level_needed"], it["price"], textures.getTexture(temp)));
+		}
+
+		std::cout << "Fishing Rods Loaded Succesfully" << std::endl;
+	}
+	f.close();
+
 
 }
 
@@ -179,16 +252,36 @@ void App::OnRender() {
 	Rectangle shop_talk_rec;
 	Rectangle shop_buy_rec;
 
+
 	Rectangle inv_skill_skill;
 	Rectangle inv_skill_luck;
 	Vector2 trgt;
 	float scale_offset = sqrt((GetScreenHeight() * GetScreenHeight()) / (540 * 540));
+	float currentTime = GetTime();
 
 	if (player.silver >= 100)
 	{
 		player.gold += player.silver / 100;
 		player.silver = player.silver % 100;
 	}
+
+	for (const auto& iter : player.fishingRods) {
+		//std::cout << iter.level_needed << std::endl;
+		bool temp = false;
+		if (iter.level_needed <= player.level) {
+			for (size_t i = 0; i < shops.shopRods.size(); ++i) {
+				if (iter.name == shops.shopRods[i].name) {
+					//std::cout << "GOTEM" << std::endl;
+					temp = true;
+					break;
+
+				}
+			}
+			if (temp) break;
+			shops.shopRods.push_back(iter);
+		}
+	}
+
 
 	switch (currentScreen) {
 
@@ -210,6 +303,35 @@ void App::OnRender() {
 				currentScreen = GAMEPLAY;
 			}
 		}
+
+		break;
+
+	case DEATH:
+		if (IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_ESCAPE)) {
+			currentScreen = GAMEPLAY;
+		}
+		DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), RAYWHITE);
+		DrawText("ANGLARIUM", GetScreenWidth() / 2 - 150, 100, 50, BLACK);
+		DrawText("YOU DIED", GetScreenWidth() / 2 - 150, 200, 30, BLACK);
+		DrawText("and lost all your money ... and fish", GetScreenWidth() / 2 - 150, 230, 20, BLACK);
+
+		player.fishInventory.clear();
+		player.gold = 0;
+		player.silver = 0;
+
+		DrawRectangleRoundedLines(button, 0.5f, 4, 2.0f, BLACK);
+		DrawRectangleRounded(button, 0.5f, 4, WHITE);
+		DrawText("PLAY", button.x + 60, button.y + 30, 30, BLACK);
+		if (mouseX >= button.x && mouseX <= button.x + button.width && mouseY >= button.y && mouseY <= button.y + button.height) {
+			DrawRectangleRounded(button, 0.5f, 4, LIGHTGRAY);
+			DrawText("PLAY", button.x + 60, button.y + 30, 30, RAYWHITE);
+			DrawRectangleRoundedLines(button, 0.5f, 4, 2.0f, BLACK);
+			if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+				currentScreen = GAMEPLAY;
+			}
+		}
+		time = 5;
+
 
 		break;
 	case PAUSE:
@@ -244,6 +366,8 @@ void App::OnRender() {
 			currentScreen = SHOP;
 		}
 
+		time += GetFrameTime();
+
 		BeginMode2D(camera);
 
 		map.drawMap();
@@ -256,6 +380,14 @@ void App::OnRender() {
 		screenCornerY = player.m_posY - GetScreenHeight() / 2 / camera.zoom + 10;
 		fishSpot.drawObjects(textures);
 		shops.drawShopObjects(textures);
+		// Day and night cycle management
+
+		DrawRectangle(screenCornerX - 5, screenCornerY - 5, GetScreenWidth() + 6, GetScreenHeight() + 6, { 0,0,0,(unsigned char)(cos(time / 10)*100 - 150)});
+		DrawRectangle(screenCornerX, screenCornerY, 10, 50, BLACK);
+		DrawRectanglePro({ (float)screenCornerX + 250, (float)screenCornerY + 20, 5, 30 }, {  0, 0}, 8.0f * time, WHITE);
+		//std::cout << currentTime << '\n';
+		if (time > 65) currentScreen = DEATH;
+
 		player.displayQ();
 		player.kbListen(fishSpot, textures.getTexture("popup_bg"), shops, soundsMan, camera, textures);
 
@@ -273,9 +405,16 @@ void App::OnRender() {
 			currentScreen = GAMEPLAY;
 			player.popupQ.erase(player.popupQ.begin(), player.popupQ.end());
 		}
+
+		DrawTextureEx(textures.getTexture("shop_bg"), { 0, 0 }, 0, 1.5 * scale_offset, WHITE);
+
+
 		DrawText("FISH SHOP", 0 + 1, 0 + 1, 75, BLACK);
 		DrawText("FISH SHOP", 0 + 1, 0 + 1, 75, RAYWHITE);
 		//DrawRectangle(0, 0 + GetScreenHeight()  / 3 * 2, GetScreenWidth(), GetScreenHeight() / 2, RAYWHITE);
+		
+		DrawTextureEx(textures.getTexture("shopkeeper"), { GetScreenWidth() / 2.0f, 50}, 0, 5 * scale_offset, WHITE);
+
 		DrawRectangleGradientV(0, 0 + GetScreenHeight() / 3 * 2, GetScreenWidth(), GetScreenHeight() / 2, RAYWHITE, DARKGRAY);
 		DrawTextureEx(textures.getTexture("coin"), { 0, (float)GetScreenHeight() / 3 * 2 }, 0, 2.2 * scale_offset, WHITE);
 		DrawTextureEx(textures.getTexture("coin"), { 0, (float)GetScreenHeight() / 3 * 2 + 50}, 0, 2.2 * scale_offset, GRAY);
@@ -285,10 +424,13 @@ void App::OnRender() {
 		case NO:
 			shop_inv_rec = { (float)GetScreenWidth() / 4, (float)GetScreenHeight() / 3 * 2 + 8, (float)GetScreenWidth() / 5, (float)GetScreenHeight() / 10 };
 			shop_buy_rec = { (float)GetScreenWidth() / 4 * 2, (float)GetScreenHeight() / 3 * 2 + 8, (float)GetScreenWidth() / 5, (float)GetScreenHeight() / 10 };
+			shop_talk_rec = { (float)GetScreenWidth() / 4 * 3, (float)GetScreenHeight() / 3 * 2 + 8, (float)GetScreenWidth() / 5, (float)GetScreenHeight() / 10 };
 			DrawRectangleRounded(shop_inv_rec, 0.5, 4, LIGHTGRAY);
 			DrawRectangleRounded(shop_buy_rec, 0.5, 4, LIGHTGRAY);
+			DrawRectangleRounded(shop_talk_rec, 0.5, 4, LIGHTGRAY);
 			DrawTextEx(GetFontDefault(), "INVENTORY", { shop_inv_rec.x + 20, shop_inv_rec.y + 15 }, 25 * scale_offset, 2, BLACK);
 			DrawTextEx(GetFontDefault(), "BUY ITEMS", { shop_buy_rec.x + 20, shop_buy_rec.y + 15 }, 25 * scale_offset, 2, BLACK);
+			DrawTextEx(GetFontDefault(), "TALK", { shop_talk_rec.x + 20, shop_talk_rec.y + 15 }, 25 * scale_offset, 2, BLACK);
 			if (CheckCollisionPointRec(GetMousePosition(), shop_inv_rec)) {
 				DrawRectangleRounded(shop_inv_rec, 0.5, 4, DARKGRAY);
 				DrawTextEx(GetFontDefault(), "INVENTORY", { shop_inv_rec.x + 20, shop_inv_rec.y + 15 }, 25 * scale_offset, 2, RAYWHITE);
@@ -301,6 +443,14 @@ void App::OnRender() {
 				DrawTextEx(GetFontDefault(), "BUY ITEMS", { shop_buy_rec.x + 20, shop_buy_rec.y + 15 }, 25 * scale_offset, 2, RAYWHITE);
 				if (IsMouseButtonPressed(0)) {
 					currentShopMenu = BUY;
+				}
+			}
+
+			if (CheckCollisionPointRec(GetMousePosition(), shop_talk_rec)) {
+				DrawRectangleRounded(shop_talk_rec, 0.5, 4, DARKGRAY);
+				DrawTextEx(GetFontDefault(), "TALK", { shop_talk_rec.x + 20, shop_talk_rec.y + 15 }, 25 * scale_offset, 2, RAYWHITE);
+				if (IsMouseButtonPressed(0)) {
+					currentShopMenu = TALK;
 				}
 			}
 
@@ -339,6 +489,38 @@ void App::OnRender() {
 			if (IsKeyPressed(KEY_BACKSPACE)) {
 				currentShopMenu = NO;
 			}
+			if (!player.fishingRods.empty()) {
+				fishrod_in_shop_inventory(player, 0, scale_offset, shops, textures);
+			}
+
+
+			break;
+		case TALK:
+
+			if (IsKeyPressed(KEY_BACKSPACE)) {
+				currentShopMenu = NO;
+			}
+
+			if (!player.shopTalkQ.empty()) {
+				
+				if (!player.shopTalkQ.empty() && currentShopTalk < player.shopTalkQ.size()) {
+					//DrawText(shopTalkQ[currentShopTalk].c_str(), (float)GetScreenWidth() / 3, (float)GetScreenHeight() / 3 * 2 + 20, 35 * scale_offset, BLACK);
+					DrawTextBoxed(GetFontDefault(), player.shopTalkQ[currentShopTalk].c_str(), { (float)GetScreenWidth() / 3, (float)GetScreenHeight() / 3 * 2 + 20, GetScreenWidth() / 2.0f, GetScreenHeight() / 3.0f }, 35 * scale_offset, 5, 5, BLACK);
+
+					if (IsMouseButtonPressed(0) || IsKeyPressed(KEY_ENTER)) {
+						currentShopTalk++;
+					}
+				}
+				else {
+					DrawText("NO MORE DIALOGUE", (float)GetScreenWidth() / 3, (float)GetScreenHeight() / 3 * 2 + 20, 35 * scale_offset, BLACK);
+
+				}
+			}
+			else {
+				DrawText("NO MORE DIALOGUE", (float)GetScreenWidth() / 3, (float)GetScreenHeight() / 3 * 2 + 20, 35 * scale_offset, BLACK);
+			}
+				
+
 			break;
 		
 

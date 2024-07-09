@@ -24,12 +24,16 @@ public:
 	long gold;
 	int silver;
 	int qtime;
-	int skill_points;
+	int skill_points = 0;
 
 	std::deque<std::string> popupQ;
+	std::vector<std::string> shopTalkQ;
+	std::vector<CFishingRod> fishingRods;
+	std::vector<CFishingRod> ownedRods;
 
 	int m_posX;
 	int m_posY;
+	int loreValue;
 	CCharacter(int posX, int posY);
 	CCharacter();
 	~CCharacter();

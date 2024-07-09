@@ -2,6 +2,8 @@
 #include "raylib.h"
 #include <vector>
 #include "CTextureManager.h"
+#include "CTools.h"
+#include <set>
 
 class CFishingSpot {
 public:
@@ -34,5 +36,6 @@ public:
     void addShopSpot(int posX, int posY, int width, int height);
     void drawShopSpots() const;
     void drawShopObjects(CTextureManager & texman) const;
+    std::vector<CFishingRod> shopRods;
 
 };

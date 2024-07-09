@@ -5,6 +5,7 @@
 #include "CTextureManager.h"
 #include <iostream>
 #include <filesystem>
+#include <deque>
 
 class App {
 	CMap map;
@@ -14,7 +15,7 @@ class App {
 	Camera2D camera;
 	CShop shops;
 	CSoundManager soundsMan;
-	typedef enum GameScreen { LOGO = 0, TITLE, GAMEPLAY, SHOP, INV, PAUSE, ENDING} GameScreen;
+	typedef enum GameScreen { LOGO = 0, TITLE, GAMEPLAY, SHOP, INV, PAUSE, ENDING, DEATH} GameScreen;
 	typedef enum ActiveMenu { NONE = 0, INVENTORY } ActiveMenu;
 	typedef enum ShopMenu { NO = 0 , SELL, BUY, TALK} ShopMenu;
 
@@ -22,8 +23,13 @@ class App {
 	ActiveMenu currentMenu;
 	ShopMenu currentShopMenu;
 
+	
+	size_t currentShopTalk = 0;
+
 	const float screenHeight = 1080 / 2;
 	const float screenWidth = 1920 / 2;
+
+	float time = 5;
 
 	std::filesystem::path assetPath = "./resources/";
 
