@@ -142,6 +142,17 @@ void fishrod_in_shop_inventory(CCharacter& player, int pos, float scale_offset, 
 	}
 }
 
+App::InitEventListeners(){
+
+	Events().AddListener("LEVEL_UP", [this](const std::unordered_map<std::string, std::string>& params) {
+        int newLevel = std::stoi(params.at("level"));
+        
+        // Example: Display level up message
+        std::string message = "Reached Level " + std::to_string(newLevel) + "!";
+        player.popupQ.push_back(message);
+	});
+}
+
 
 
 App::App() : textures(CTextureManager()), camera({0}) {}

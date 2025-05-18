@@ -6,8 +6,17 @@
 #include "iostream"
 #include "CPopups.h"
 #include "Fish.h"
+#include "EventSystem.h"
 #include <algorithm>
 #include <sstream>
+
+enum class CharacterEvents {
+    XP_GAINED,
+    LEVEL_UP,
+    QUEST_PROGRESS,
+    SHOP_DIALOGUE_PROGRESS
+};
+
 
 template<typename T>
 std::string toString(const T& src) {
@@ -171,6 +180,7 @@ void CCharacter::update() {
         if (level < 2) {
             skill_points += 3;
             popupQ.push_back("LEVEL UP!");
+            EventSystem::GetInstance().emitEvent("LEVEL_UP", {"level", "2"});
             loreValue = 3;
             level = 2;
         }
@@ -179,6 +189,7 @@ void CCharacter::update() {
         if (xp > 750 && xp < 3126) {
             if (level < 3) {
                 popupQ.push_back("LEVEL UP!");
+                EventSystem::GetInstance().emitEvent("LEVEL_UP", {"level", "3"});
                 skill_points += 3;
                 level = 3;
             }
@@ -188,6 +199,7 @@ void CCharacter::update() {
         if (xp > 3125 && xp < 13259) {
             if (level < 4) {
                 popupQ.push_back("LEVEL UP!");
+                EventSystem::GetInstance().emitEvent("LEVEL_UP", {"level", "4"});
                 skill_points += 3;
                 level = 4;
             }

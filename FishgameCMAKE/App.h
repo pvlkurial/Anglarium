@@ -3,6 +3,7 @@
 #include "CCharacter.h"
 #include "CFishing.h"
 #include "CTextureManager.h"
+#include "CEventSystem.h"
 #include <iostream>
 #include <filesystem>
 #include <deque>
@@ -41,6 +42,7 @@ public:
 
 	void Init();
 
+	void InitEventListeners();
 
 	void RunGame();
 
